@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { StatesModule } from './states/states.module';
+import { CitiesModule } from './cities/cities.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { StatesModule } from './states/states.module';
     AuthModule,
     UsersModule,
     StatesModule,
+    CitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

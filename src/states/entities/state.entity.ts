@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { City } from '../../cities/entities/city.entity';
 
 @Entity('states')
 export class State {
@@ -10,6 +11,9 @@ export class State {
 
   @Column({ type: 'varchar' })
   name: string;
+
+  @OneToMany(() => City, (city) => city.state)
+  cities: City[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;

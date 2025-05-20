@@ -56,7 +56,7 @@ export class StatesService {
     const state = await this.stateRepo.delete({ id });
 
     if (state.affected === 0) {
-      throw new Error('Estado não encontrado');
+      throw new Error(`Estado com ID ${id} não encontrado`);
     }
   }
 
