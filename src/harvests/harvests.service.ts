@@ -1,10 +1,9 @@
-import { Injectable, Req, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateHarvestDto } from './dto/create-harvest.dto';
 import { UpdateHarvestDto } from './dto/update-harvest.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Harvest } from './entities/harvest.entity';
-import { Request } from 'express';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
@@ -18,16 +17,14 @@ export class HarvestsService {
 
   async create(
     createHarvestDto: CreateHarvestDto,
-    @Req() req: Request,
-  ): Promise<Harvest> {
-    if (!req.user || typeof req.user !== 'object' || !('sub' in req.user)) {
-      throw new UnauthorizedException('Usuário não autenticado corretamente');
-    }
-
+    userId: string | number,
+  ): Promise<Omit<Harvest, 'created_by'>> {
     await this.validateNameUnique(createHarvestDto.name);
 
-    const userId = Number(req.user.sub);
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({
+      where: { id: Number(userId) },
+      select: ['id'],
+    });
 
     if (!user) {
       throw new Error('Usuário não encontrado');
@@ -40,7 +37,10 @@ export class HarvestsService {
       updated_at: new Date(),
     });
 
-    return await this.harvestRepo.save(newHarvest);
+    const savedHarvest = await this.harvestRepo.save(newHarvest);
+
+    const { created_by: _created_by, ...result } = savedHarvest;
+    return result;
   }
 
   async findAll(): Promise<Harvest[]> {
