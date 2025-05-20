@@ -14,6 +14,8 @@ import { CreateHarvestDto } from './dto/create-harvest.dto';
 import { UpdateHarvestDto } from './dto/update-harvest.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { User } from '../common/decorators/user.decorator';
+import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 
 @ApiTags('harvests')
 @ApiBearerAuth('access-token')
@@ -23,8 +25,8 @@ export class HarvestsController {
   constructor(private readonly harvestsService: HarvestsService) {}
 
   @Post()
-  create(@Body() createHarvestDto: CreateHarvestDto, @Request() req) {
-    return this.harvestsService.create(createHarvestDto, req);
+  create(@Body() createHarvestDto: CreateHarvestDto, @User() user: JwtPayload) {
+    return this.harvestsService.create(createHarvestDto, user.sub);
   }
 
   @Get()
