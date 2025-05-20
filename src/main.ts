@@ -16,12 +16,22 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('Minha API')
-    .setDescription('Documentação das rotas')
+    .setTitle('API Brain Agriculture')
+    .setDescription('Documentação da API')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        in: 'header',
+      },
+      'access-token',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('api', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
 }
