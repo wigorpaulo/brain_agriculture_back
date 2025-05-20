@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { StatesModule } from './states/states.module';
 import { CitiesModule } from './cities/cities.module';
+import { HarvestsModule } from './harvests/harvests.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CitiesModule } from './cities/cities.module';
     UsersModule,
     StatesModule,
     CitiesModule,
+    HarvestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
