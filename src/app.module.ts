@@ -9,6 +9,7 @@ import { StatesModule } from './states/states.module';
 import { CitiesModule } from './cities/cities.module';
 import { HarvestsModule } from './harvests/harvests.module';
 import { PlantedCulturesModule } from './planted_cultures/planted_cultures.module';
+import { ProducersModule } from './producers/producers.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { PlantedCulturesModule } from './planted_cultures/planted_cultures.modul
     CitiesModule,
     HarvestsModule,
     PlantedCulturesModule,
+    ProducersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
