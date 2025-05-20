@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Harvest } from '../../harvests/entities/harvest.entity';
 import { PlantedCulture } from '../../planted_cultures/entities/planted_culture.entity';
+import { Producer } from '../../producers/entities/producer.entity';
 
 @Entity('users')
 export class User {
@@ -24,6 +25,9 @@ export class User {
     (planted_culture) => planted_culture.created_by,
   )
   planted_cultures: PlantedCulture[];
+
+  @OneToMany(() => Producer, (producer) => producer.created_by)
+  producers: Producer[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
