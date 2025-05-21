@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateStateDto } from './dto/create-state.dto';
 import { UpdateStateDto } from './dto/update-state.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -39,7 +39,7 @@ export class StatesService {
     const state = await this.stateRepo.findOne({ where: { id } });
 
     if (!state) {
-      throw new Error('Estado não encontrado');
+      this.messageStateNotFound(id);
     }
 
     const updateData: Partial<State> = {
@@ -56,7 +56,7 @@ export class StatesService {
     const state = await this.stateRepo.delete({ id });
 
     if (state.affected === 0) {
-      throw new Error(`Estado com ID ${id} não encontrado`);
+      this.messageStateNotFound(id);
     }
   }
 
@@ -72,7 +72,24 @@ export class StatesService {
     const isUniqueName = await this.isUniqueName(name);
 
     if (!isUniqueName) {
-      throw new Error('Nome já cadastrado');
+      throw new BadRequestException({
+        message: `Nome já cadastrado`,
+        details: {
+          name,
+          suggestion: 'Escolha outro nome para o estado.',
+        },
+      });
     }
+  }
+
+  private messageStateNotFound(id: number): never {
+    throw new NotFoundException({
+      message: `Estado não encontrada`,
+      details: {
+        id,
+        suggestion:
+          'Verifique se o ID está correto ou liste os estado disponíveis primeiro',
+      },
+    });
   }
 }

@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -36,7 +40,7 @@ export class UsersService {
     const user = await this.userRepo.findOne({ where: { id } });
 
     if (!user) {
-      throw new Error('Usuário não encontrado');
+      this.messageUserNotFound(id);
     }
 
     const updateData: Partial<User> = {
@@ -65,13 +69,29 @@ export class UsersService {
     const isUniqueEmail = await this.isUniqueEmail(email);
 
     if (!isUniqueEmail) {
-      throw new Error('Email já cadastrado');
+      throw new BadRequestException({
+        message: `E-mail já cadastrado`,
+        details: {
+          email,
+          suggestion: 'Escolha outro e-mail.',
+        },
+      });
     }
   }
 
   private async encryptPassword(password: string): Promise<string> {
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    return hashedPassword;
+    return await bcrypt.hash(password, saltRounds);
+  }
+
+  private messageUserNotFound(id: number): never {
+    throw new NotFoundException({
+      message: `Usuário não encontrada`,
+      details: {
+        id,
+        suggestion:
+          'Verifique se o ID está correto ou liste os usuparios disponíveis primeiro',
+      },
+    });
   }
 }

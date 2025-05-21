@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateHarvestDto } from './dto/create-harvest.dto';
 import { UpdateHarvestDto } from './dto/update-harvest.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Harvest } from './entities/harvest.entity';
 import { User } from '../users/entities/user.entity';
+import { UserValidationService } from '../common/services/user-validation.service';
 
 @Injectable()
 export class HarvestsService {
@@ -13,6 +18,7 @@ export class HarvestsService {
     private harvestRepo: Repository<Harvest>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private readonly userValidationService: UserValidationService,
   ) {}
 
   async create(
@@ -21,14 +27,7 @@ export class HarvestsService {
   ): Promise<Omit<Harvest, 'created_by'>> {
     await this.validateNameUnique(createHarvestDto.name);
 
-    const user = await this.userRepo.findOne({
-      where: { id: Number(userId) },
-      select: ['id'],
-    });
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
+    const user = await this.userValidationService.validateUserId(userId);
 
     const newHarvest = this.harvestRepo.create({
       ...createHarvestDto,
@@ -62,7 +61,7 @@ export class HarvestsService {
     const harvest = await this.harvestRepo.findOne({ where: { id } });
 
     if (!harvest) {
-      throw new Error('Safra não encontrada');
+      this.messageHarvestNotFound(id);
     }
 
     const updateData: Partial<Harvest> = {
@@ -79,7 +78,7 @@ export class HarvestsService {
     const harvest = await this.harvestRepo.delete({ id });
 
     if (harvest.affected === 0) {
-      throw new Error(`Safra com ID ${id} não encontrada`);
+      this.messageHarvestNotFound(id);
     }
   }
 
@@ -95,7 +94,24 @@ export class HarvestsService {
     const isUniqueName = await this.isUniqueName(name);
 
     if (!isUniqueName) {
-      throw new Error('Nome já cadastrado');
+      throw new BadRequestException({
+        message: `Nome já cadastrado`,
+        details: {
+          name,
+          suggestion: 'Escolha outro nome para a safra.',
+        },
+      });
     }
+  }
+
+  private messageHarvestNotFound(id: number): never {
+    throw new NotFoundException({
+      message: `Safra não encontrada`,
+      details: {
+        id,
+        suggestion:
+          'Verifique se o ID está correto ou liste as safras disponíveis primeiro',
+      },
+    });
   }
 }

@@ -4,9 +4,10 @@ import { PlantedCulturesController } from './planted_cultures.controller';
 import { PlantedCulture } from './entities/planted_culture.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
+import { CommonModule } from '../common/common.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PlantedCulture, User])],
+  imports: [TypeOrmModule.forFeature([PlantedCulture, User]), CommonModule],
   controllers: [PlantedCulturesController],
   providers: [PlantedCulturesService],
 })
