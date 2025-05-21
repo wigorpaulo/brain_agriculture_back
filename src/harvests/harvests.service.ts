@@ -1,33 +1,31 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateHarvestDto } from './dto/create-harvest.dto';
 import { UpdateHarvestDto } from './dto/update-harvest.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Harvest } from './entities/harvest.entity';
-import { User } from '../users/entities/user.entity';
 import { UserValidationService } from '../common/services/user-validation.service';
+import { HarvestValidationService } from '../common/services/harvest-validation.service';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class HarvestsService {
   constructor(
     @InjectRepository(Harvest)
-    private harvestRepo: Repository<Harvest>,
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
+    private readonly harvestRepo: Repository<Harvest>,
     private readonly userValidationService: UserValidationService,
+    private readonly harvestValidationService: HarvestValidationService,
   ) {}
 
   async create(
     createHarvestDto: CreateHarvestDto,
     userId: string | number,
   ): Promise<Omit<Harvest, 'created_by'>> {
-    await this.validateNameUnique(createHarvestDto.name);
+    await this.harvestValidationService.validateNameUnique(
+      createHarvestDto.name,
+    );
 
-    const user = await this.userValidationService.validateUserId(userId);
+    const user = await this.userValidationService.validate(userId);
 
     const newHarvest = this.harvestRepo.create({
       ...createHarvestDto,
@@ -36,14 +34,15 @@ export class HarvestsService {
       updated_at: new Date(),
     });
 
-    const savedHarvest = await this.harvestRepo.save(newHarvest);
-
-    const { created_by: _created_by, ...result } = savedHarvest;
-    return result;
+    return await this.harvestRepo.save(newHarvest);
   }
 
-  async findAll(): Promise<Harvest[]> {
-    return await this.harvestRepo.find();
+  async findAll(): Promise<Record<string, any>> {
+    const harvests = await this.harvestRepo.find({
+      relations: ['created_by'],
+    });
+
+    return instanceToPlain(harvests);
   }
 
   async findOne(id: number): Promise<Harvest | null> {
@@ -55,14 +54,12 @@ export class HarvestsService {
     updateHarvestDto: UpdateHarvestDto,
   ): Promise<Harvest> {
     if (updateHarvestDto.name) {
-      await this.validateNameUnique(updateHarvestDto.name);
+      await this.harvestValidationService.validateNameUnique(
+        updateHarvestDto.name,
+      );
     }
 
-    const harvest = await this.harvestRepo.findOne({ where: { id } });
-
-    if (!harvest) {
-      this.messageHarvestNotFound(id);
-    }
+    const harvest = await this.harvestValidationService.validate(id);
 
     const updateData: Partial<Harvest> = {
       ...updateHarvestDto,
@@ -75,43 +72,8 @@ export class HarvestsService {
   }
 
   async remove(id: number): Promise<void> {
-    const harvest = await this.harvestRepo.delete({ id });
+    const harvest = await this.harvestValidationService.validate(id);
 
-    if (harvest.affected === 0) {
-      this.messageHarvestNotFound(id);
-    }
-  }
-
-  private async isUniqueName(name: string): Promise<boolean> {
-    const exist = await this.harvestRepo.count({
-      where: { name },
-    });
-
-    return exist === 0;
-  }
-
-  private async validateNameUnique(name: string): Promise<void> {
-    const isUniqueName = await this.isUniqueName(name);
-
-    if (!isUniqueName) {
-      throw new BadRequestException({
-        message: `Nome já cadastrado`,
-        details: {
-          name,
-          suggestion: 'Escolha outro nome para a safra.',
-        },
-      });
-    }
-  }
-
-  private messageHarvestNotFound(id: number): never {
-    throw new NotFoundException({
-      message: `Safra não encontrada`,
-      details: {
-        id,
-        suggestion:
-          'Verifique se o ID está correto ou liste as safras disponíveis primeiro',
-      },
-    });
+    await this.harvestRepo.remove(harvest);
   }
 }

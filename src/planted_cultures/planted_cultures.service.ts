@@ -1,33 +1,31 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreatePlantedCultureDto } from './dto/create-planted_culture.dto';
 import { UpdatePlantedCultureDto } from './dto/update-planted_culture.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlantedCulture } from './entities/planted_culture.entity';
 import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
 import { UserValidationService } from '../common/services/user-validation.service';
+import { PlantedCultureValidationService } from '../common/services/planted_culture-validation.service';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class PlantedCulturesService {
   constructor(
     @InjectRepository(PlantedCulture)
-    private plantedCultureRepo: Repository<PlantedCulture>,
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
+    private readonly plantedCultureRepo: Repository<PlantedCulture>,
     private readonly userValidationService: UserValidationService,
+    private readonly plantedCultureValidationService: PlantedCultureValidationService,
   ) {}
 
   async create(
     createPlantedCultureDto: CreatePlantedCultureDto,
     userId: string | number,
-  ): Promise<Omit<PlantedCulture, 'created_by'>> {
-    await this.validateNameUnique(createPlantedCultureDto.name);
+  ): Promise<Record<string, any>> {
+    await this.plantedCultureValidationService.validateNameUnique(
+      createPlantedCultureDto.name,
+    );
 
-    const user = await this.userValidationService.validateUserId(userId);
+    const user = await this.userValidationService.validate(userId);
 
     const newPlantedCulture = this.plantedCultureRepo.create({
       ...createPlantedCultureDto,
@@ -36,15 +34,17 @@ export class PlantedCulturesService {
       updated_at: new Date(),
     });
 
-    const savedPlantedCulture =
-      await this.plantedCultureRepo.save(newPlantedCulture);
-
-    const { created_by: _created_by, ...result } = savedPlantedCulture;
-    return result;
+    return instanceToPlain(
+      await this.plantedCultureRepo.save(newPlantedCulture),
+    );
   }
 
-  async findAll(): Promise<PlantedCulture[]> {
-    return await this.plantedCultureRepo.find();
+  async findAll(): Promise<Record<string, any>> {
+    const plantedCultures = await this.plantedCultureRepo.find({
+      relations: ['created_by'],
+    });
+
+    return instanceToPlain(plantedCultures);
   }
 
   async findOne(id: number): Promise<PlantedCulture | null> {
@@ -56,16 +56,13 @@ export class PlantedCulturesService {
     updatePlantedCultureDto: UpdatePlantedCultureDto,
   ): Promise<PlantedCulture> {
     if (updatePlantedCultureDto.name) {
-      await this.validateNameUnique(updatePlantedCultureDto.name);
+      await this.plantedCultureValidationService.validateNameUnique(
+        updatePlantedCultureDto.name,
+      );
     }
 
-    const plantedCulture = await this.plantedCultureRepo.findOne({
-      where: { id },
-    });
-
-    if (!plantedCulture) {
-      this.messagePlantedCultureNotFound(id);
-    }
+    const plantedCulture =
+      await this.plantedCultureValidationService.validate(id);
 
     const updateData: Partial<PlantedCulture> = {
       ...updatePlantedCultureDto,
@@ -81,43 +78,9 @@ export class PlantedCulturesService {
   }
 
   async remove(id: number): Promise<void> {
-    const plantedCulture = await this.plantedCultureRepo.delete({ id });
+    const plantedCulture =
+      await this.plantedCultureValidationService.validate(id);
 
-    if (plantedCulture.affected === 0) {
-      this.messagePlantedCultureNotFound(id);
-    }
-  }
-
-  private async isUniqueName(name: string): Promise<boolean> {
-    const exist = await this.plantedCultureRepo.count({
-      where: { name },
-    });
-
-    return exist === 0;
-  }
-
-  private async validateNameUnique(name: string): Promise<void> {
-    const isUniqueName = await this.isUniqueName(name);
-
-    if (!isUniqueName) {
-      throw new BadRequestException({
-        message: `Nome já cadastrado`,
-        details: {
-          name,
-          suggestion: 'Escolha outro nome para a cultura plantada.',
-        },
-      });
-    }
-  }
-
-  private messagePlantedCultureNotFound(id: number): never {
-    throw new NotFoundException({
-      message: `Cultura plantada não encontrada`,
-      details: {
-        id,
-        suggestion:
-          'Verifique se o ID está correto ou liste as cultura plantada disponíveis primeiro',
-      },
-    });
+    await this.plantedCultureRepo.remove(plantedCulture);
   }
 }

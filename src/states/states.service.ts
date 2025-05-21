@@ -1,19 +1,21 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateStateDto } from './dto/create-state.dto';
 import { UpdateStateDto } from './dto/update-state.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { State } from './entities/state.entity';
 import { Repository } from 'typeorm';
+import { StateValidationService } from '../common/services/state-validation.service';
 
 @Injectable()
 export class StatesService {
   constructor(
     @InjectRepository(State)
-    private stateRepo: Repository<State>,
+    private readonly stateRepo: Repository<State>,
+    private readonly stateValidationService: StateValidationService,
   ) {}
 
   async create(createStateDto: CreateStateDto): Promise<State> {
-    await this.validateNameUnique(createStateDto.name);
+    await this.stateValidationService.validateNameUnique(createStateDto.name);
     const newState = this.stateRepo.create({
       ...createStateDto,
       created_at: new Date(),
@@ -33,14 +35,10 @@ export class StatesService {
 
   async update(id: number, updateStateDto: UpdateStateDto): Promise<State> {
     if (updateStateDto.name) {
-      await this.validateNameUnique(updateStateDto.name);
+      await this.stateValidationService.validateNameUnique(updateStateDto.name);
     }
 
-    const state = await this.stateRepo.findOne({ where: { id } });
-
-    if (!state) {
-      this.messageStateNotFound(id);
-    }
+    const state = await this.stateValidationService.validate(id);
 
     const updateData: Partial<State> = {
       ...updateStateDto,
@@ -53,43 +51,8 @@ export class StatesService {
   }
 
   async remove(id: number): Promise<void> {
-    const state = await this.stateRepo.delete({ id });
+    const state = await this.stateValidationService.validate(id);
 
-    if (state.affected === 0) {
-      this.messageStateNotFound(id);
-    }
-  }
-
-  private async isUniqueName(name: string): Promise<boolean> {
-    const exist = await this.stateRepo.count({
-      where: { name },
-    });
-
-    return exist === 0;
-  }
-
-  private async validateNameUnique(name: string): Promise<void> {
-    const isUniqueName = await this.isUniqueName(name);
-
-    if (!isUniqueName) {
-      throw new BadRequestException({
-        message: `Nome já cadastrado`,
-        details: {
-          name,
-          suggestion: 'Escolha outro nome para o estado.',
-        },
-      });
-    }
-  }
-
-  private messageStateNotFound(id: number): never {
-    throw new NotFoundException({
-      message: `Estado não encontrada`,
-      details: {
-        id,
-        suggestion:
-          'Verifique se o ID está correto ou liste os estado disponíveis primeiro',
-      },
-    });
+    await this.stateRepo.remove(state);
   }
 }

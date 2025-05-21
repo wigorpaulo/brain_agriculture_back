@@ -10,16 +10,7 @@ import { PlantedCulture } from '../planted_cultures/entities/planted_culture.ent
 import { CommonModule } from '../common/common.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Cultivation,
-      User,
-      RuralProperty,
-      Harvest,
-      PlantedCulture,
-    ]),
-    CommonModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Cultivation]), CommonModule],
   controllers: [CultivationsController],
   providers: [CultivationsService],
 })

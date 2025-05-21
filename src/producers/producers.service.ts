@@ -1,49 +1,56 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateProducerDto } from './dto/create-producer.dto';
 import { UpdateProducerDto } from './dto/update-producer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Producer } from './entities/producer.entity';
 import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
 import { UserValidationService } from '../common/services/user-validation.service';
+import { ProducerValidationService } from '../common/services/producer-validation.service';
+import { City } from '../cities/entities/city.entity';
+import { CityValidationService } from '../common/services/city-validation.service';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class ProducersService {
   constructor(
     @InjectRepository(Producer)
     private producerRepo: Repository<Producer>,
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
     private readonly userValidationService: UserValidationService,
+    private readonly producerValidationService: ProducerValidationService,
+    private readonly cityValidationService: CityValidationService,
   ) {}
 
   async create(
     createProducerDto: CreateProducerDto,
     userId: string | number,
-  ): Promise<Omit<Producer, 'created_by'>> {
-    await this.validateCpfCnpjUnique(createProducerDto.cpf_cnpj);
+  ): Promise<Record<string, any>> {
+    await this.producerValidationService.validateCpfCnpjUnique(
+      createProducerDto.cpf_cnpj,
+    );
 
-    const user = await this.userValidationService.validateUserId(userId);
+    const user = await this.userValidationService.validate(userId);
+
+    const city = await this.cityValidationService.validate(
+      createProducerDto.city_id,
+    );
 
     const newProducer = this.producerRepo.create({
       ...createProducerDto,
+      city: city,
       created_by: user,
       created_at: new Date(),
       updated_at: new Date(),
     });
 
-    const savedProducer = await this.producerRepo.save(newProducer);
-
-    const { created_by: _created_by, ...result } = savedProducer;
-    return result;
+    return instanceToPlain(await this.producerRepo.save(newProducer));
   }
 
-  async findAll(): Promise<Producer[]> {
-    return await this.producerRepo.find();
+  async findAll(): Promise<Record<string, any>> {
+    const producers = await this.producerRepo.find({
+      relations: ['city', 'created_by'],
+    });
+
+    return instanceToPlain(producers);
   }
 
   async findOne(id: number): Promise<Producer | null> {
@@ -55,19 +62,28 @@ export class ProducersService {
     updateProducerDto: UpdateProducerDto,
   ): Promise<Producer> {
     if (updateProducerDto.cpf_cnpj) {
-      await this.validateCpfCnpjUnique(updateProducerDto.cpf_cnpj);
+      await this.producerValidationService.validateCpfCnpjUnique(
+        updateProducerDto.cpf_cnpj,
+      );
     }
 
-    const producer = await this.producerRepo.findOne({ where: { id } });
-
-    if (!producer) {
-      this.messageProducerNotFound(id);
+    let city: City | undefined;
+    if (updateProducerDto.city_id) {
+      city = await this.cityValidationService.validate(
+        updateProducerDto.city_id,
+      );
     }
+
+    const producer = await this.producerValidationService.validate(id);
 
     const updateData: Partial<Producer> = {
       ...updateProducerDto,
       updated_at: new Date(),
     };
+
+    if (city) {
+      updateData.city = city;
+    }
 
     const updatedProducer = this.producerRepo.merge(producer, updateData);
 
@@ -75,43 +91,8 @@ export class ProducersService {
   }
 
   async remove(id: number): Promise<void> {
-    const producer = await this.producerRepo.delete({ id });
+    const producer = await this.producerValidationService.validate(id);
 
-    if (producer.affected === 0) {
-      this.messageProducerNotFound(id);
-    }
-  }
-
-  private async isUniqueCpfCnpj(cpfCnpj: string): Promise<boolean> {
-    const exist = await this.producerRepo.count({
-      where: { cpf_cnpj: cpfCnpj },
-    });
-
-    return exist === 0;
-  }
-
-  private async validateCpfCnpjUnique(cpf_cnpj: string): Promise<void> {
-    const isUniqueCpfCnpj = await this.isUniqueCpfCnpj(cpf_cnpj);
-
-    if (!isUniqueCpfCnpj) {
-      throw new BadRequestException({
-        message: `CPF ou CNPJ já cadastrado`,
-        details: {
-          cpf_cnpj,
-          suggestion: 'Escolha outro CPF ou CNPJ para o produtor.',
-        },
-      });
-    }
-  }
-
-  private messageProducerNotFound(id: number): never {
-    throw new NotFoundException({
-      message: `Produtor não encontrada`,
-      details: {
-        id,
-        suggestion:
-          'Verifique se o ID está correto ou liste os produtor disponíveis primeiro',
-      },
-    });
+    await this.producerRepo.remove(producer);
   }
 }

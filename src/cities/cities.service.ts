@@ -1,25 +1,32 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCityDto } from './dto/create-city.dto';
 import { UpdateCityDto } from './dto/update-city.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { City } from './entities/city.entity';
 import { Repository } from 'typeorm';
+import { CityValidationService } from '../common/services/city-validation.service';
+import { StateValidationService } from '../common/services/state-validation.service';
+import { State } from '../states/entities/state.entity';
 
 @Injectable()
 export class CitiesService {
   constructor(
     @InjectRepository(City)
-    private cityRepo: Repository<City>,
+    private readonly cityRepo: Repository<City>,
+    private readonly cityValidationService: CityValidationService,
+    private readonly stateValidationService: StateValidationService,
   ) {}
 
   async create(createCityDto: CreateCityDto): Promise<City> {
-    await this.validateNameUnique(createCityDto.name);
+    await this.cityValidationService.validateNameUnique(createCityDto.name);
+
+    const state = await this.stateValidationService.validate(
+      createCityDto.state_id,
+    );
+
     const newCity = this.cityRepo.create({
       ...createCityDto,
+      state: state,
       created_at: new Date(),
       updated_at: new Date(),
     });
@@ -28,7 +35,9 @@ export class CitiesService {
   }
 
   async findAll(): Promise<City[]> {
-    return await this.cityRepo.find();
+    return await this.cityRepo.find({
+      relations: ['state'],
+    });
   }
 
   async findOne(id: number): Promise<City | null> {
@@ -37,19 +46,26 @@ export class CitiesService {
 
   async update(id: number, updateCityDto: UpdateCityDto): Promise<City> {
     if (updateCityDto.name) {
-      await this.validateNameUnique(updateCityDto.name);
+      await this.cityValidationService.validateNameUnique(updateCityDto.name);
     }
 
-    const city = await this.cityRepo.findOne({ where: { id } });
-
-    if (!city) {
-      this.messageCityNotFound(id);
+    let state: State | undefined;
+    if (updateCityDto.state_id) {
+      state = await this.stateValidationService.validate(
+        updateCityDto.state_id,
+      );
     }
+
+    const city = await this.cityValidationService.validate(id);
 
     const updateData: Partial<City> = {
       ...updateCityDto,
       updated_at: new Date(),
     };
+
+    if (state) {
+      updateData.state = state;
+    }
 
     const updatedCity = this.cityRepo.merge(city, updateData);
 
@@ -57,43 +73,8 @@ export class CitiesService {
   }
 
   async remove(id: number): Promise<void> {
-    const city = await this.cityRepo.delete({ id });
+    const city = await this.cityValidationService.validate(id);
 
-    if (city.affected === 0) {
-      this.messageCityNotFound(id);
-    }
-  }
-
-  private async isUniqueName(name: string): Promise<boolean> {
-    const exist = await this.cityRepo.count({
-      where: { name },
-    });
-
-    return exist === 0;
-  }
-
-  private async validateNameUnique(name: string): Promise<void> {
-    const isUniqueName = await this.isUniqueName(name);
-
-    if (!isUniqueName) {
-      throw new BadRequestException({
-        message: `Nome já cadastrado`,
-        details: {
-          name,
-          suggestion: 'Escolha outro nome para a cidade.',
-        },
-      });
-    }
-  }
-
-  private messageCityNotFound(id: number): never {
-    throw new NotFoundException({
-      message: `Cidade não encontrada`,
-      details: {
-        id,
-        suggestion:
-          'Verifique se o ID está correto ou liste as cidades disponíveis primeiro',
-      },
-    });
+    await this.cityRepo.remove(city);
   }
 }

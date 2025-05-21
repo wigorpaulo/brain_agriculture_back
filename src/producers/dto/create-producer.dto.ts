@@ -9,7 +9,7 @@ export class CreateProducerDto {
   @Validate(IsCpfOrCnpj)
   cpf_cnpj: string;
 
-  @ApiProperty({ example: 'Soja' })
+  @ApiProperty({ example: 'João Carlos' })
   @IsString()
   @IsNotEmpty()
   name: string;
