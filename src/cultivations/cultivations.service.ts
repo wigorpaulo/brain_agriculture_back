@@ -1,41 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCultivationDto } from './dto/create-cultivation.dto';
 import { UpdateCultivationDto } from './dto/update-cultivation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cultivation } from './entities/cultivation.entity';
 import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
 import { RuralProperty } from '../rural_properties/entities/rural_property.entity';
 import { Harvest } from '../harvests/entities/harvest.entity';
 import { PlantedCulture } from '../planted_cultures/entities/planted_culture.entity';
+import { UserValidationService } from '../common/services/user-validation.service';
 
 @Injectable()
 export class CultivationsService {
   constructor(
     @InjectRepository(Cultivation)
     private cultivationRepo: Repository<Cultivation>,
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
     @InjectRepository(RuralProperty)
     private ruralPropertyRepo: Repository<RuralProperty>,
     @InjectRepository(Harvest)
     private harvestRepo: Repository<Harvest>,
     @InjectRepository(PlantedCulture)
     private plantedCultureRepo: Repository<PlantedCulture>,
+    private readonly userValidationService: UserValidationService,
   ) {}
 
   async create(
     createCultivationDto: CreateCultivationDto,
     userId: string | number,
   ): Promise<Omit<Cultivation, 'created_by'>> {
-    const user = await this.userRepo.findOne({
-      where: { id: Number(userId) },
-      select: ['id'],
-    });
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
+    const user = await this.userValidationService.validateUserId(userId);
 
     if (createCultivationDto.rural_propertyId) {
       await this.isValidaRuralPropertyId(createCultivationDto.rural_propertyId);
@@ -79,7 +71,7 @@ export class CultivationsService {
     const cultivation = await this.cultivationRepo.findOne({ where: { id } });
 
     if (!cultivation) {
-      throw new Error('Cultura não encontrada');
+      return this.messageCultureNotFound(id);
     }
 
     if (updateCultivationDto.rural_propertyId) {
@@ -113,7 +105,7 @@ export class CultivationsService {
     const cultivation = await this.cultivationRepo.delete({ id });
 
     if (cultivation.affected === 0) {
-      throw new Error(`Cultura com ID ${id} não encontrada`);
+      this.messageCultureNotFound(id);
     }
   }
 
@@ -123,7 +115,14 @@ export class CultivationsService {
     });
 
     if (exist === 0) {
-      throw new Error(`Propriedade rural com ID ${id} não encontrada`);
+      throw new NotFoundException({
+        message: `Propriedade rural não encontrada`,
+        details: {
+          id,
+          suggestion:
+            'Verifique se o ID está correto ou liste as propriedade rural disponíveis primeiro',
+        },
+      });
     }
   }
 
@@ -133,7 +132,14 @@ export class CultivationsService {
     });
 
     if (exist === 0) {
-      throw new Error(`Safra com ID ${id} não encontrada`);
+      throw new NotFoundException({
+        message: `Safra não encontrada`,
+        details: {
+          id,
+          suggestion:
+            'Verifique se o ID está correto ou liste as safras disponíveis primeiro',
+        },
+      });
     }
   }
 
@@ -143,7 +149,25 @@ export class CultivationsService {
     });
 
     if (exist === 0) {
-      throw new Error(`Cultura plantada com ID ${id} não encontrada`);
+      throw new NotFoundException({
+        message: `Cultura plantada não encontrada`,
+        details: {
+          id,
+          suggestion:
+            'Verifique se o ID está correto ou liste as culturas disponíveis primeiro',
+        },
+      });
     }
+  }
+
+  private messageCultureNotFound(id: number): never {
+    throw new NotFoundException({
+      message: `Cultivos não encontrada`,
+      details: {
+        id,
+        suggestion:
+          'Verifique se o ID está correto ou liste os cultivos disponíveis primeiro',
+      },
+    });
   }
 }

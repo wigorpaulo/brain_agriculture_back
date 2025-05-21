@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RuralProperty } from '../rural_properties/entities/rural_property.entity';
 import { Harvest } from '../harvests/entities/harvest.entity';
 import { PlantedCulture } from '../planted_cultures/entities/planted_culture.entity';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { PlantedCulture } from '../planted_cultures/entities/planted_culture.ent
       Harvest,
       PlantedCulture,
     ]),
+    CommonModule,
   ],
   controllers: [CultivationsController],
   providers: [CultivationsService],

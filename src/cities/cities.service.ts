@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateCityDto } from './dto/create-city.dto';
 import { UpdateCityDto } from './dto/update-city.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -39,7 +43,7 @@ export class CitiesService {
     const city = await this.cityRepo.findOne({ where: { id } });
 
     if (!city) {
-      throw new Error('Cidade não encontrada');
+      this.messageCityNotFound(id);
     }
 
     const updateData: Partial<City> = {
@@ -56,7 +60,7 @@ export class CitiesService {
     const city = await this.cityRepo.delete({ id });
 
     if (city.affected === 0) {
-      throw new Error(`Cidade com ID ${id} não encontrada`);
+      this.messageCityNotFound(id);
     }
   }
 
@@ -72,7 +76,24 @@ export class CitiesService {
     const isUniqueName = await this.isUniqueName(name);
 
     if (!isUniqueName) {
-      throw new Error('Nome já cadastrado');
+      throw new BadRequestException({
+        message: `Nome já cadastrado`,
+        details: {
+          name,
+          suggestion: 'Escolha outro nome para a cidade.',
+        },
+      });
     }
+  }
+
+  private messageCityNotFound(id: number): never {
+    throw new NotFoundException({
+      message: `Cidade não encontrada`,
+      details: {
+        id,
+        suggestion:
+          'Verifique se o ID está correto ou liste as cidades disponíveis primeiro',
+      },
+    });
   }
 }

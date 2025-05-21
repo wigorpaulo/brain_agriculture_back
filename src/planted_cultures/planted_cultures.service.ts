@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePlantedCultureDto } from './dto/create-planted_culture.dto';
 import { UpdatePlantedCultureDto } from './dto/update-planted_culture.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlantedCulture } from './entities/planted_culture.entity';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { UserValidationService } from '../common/services/user-validation.service';
 
 @Injectable()
 export class PlantedCulturesService {
@@ -13,6 +18,7 @@ export class PlantedCulturesService {
     private plantedCultureRepo: Repository<PlantedCulture>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private readonly userValidationService: UserValidationService,
   ) {}
 
   async create(
@@ -21,14 +27,7 @@ export class PlantedCulturesService {
   ): Promise<Omit<PlantedCulture, 'created_by'>> {
     await this.validateNameUnique(createPlantedCultureDto.name);
 
-    const user = await this.userRepo.findOne({
-      where: { id: Number(userId) },
-      select: ['id'],
-    });
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
+    const user = await this.userValidationService.validateUserId(userId);
 
     const newPlantedCulture = this.plantedCultureRepo.create({
       ...createPlantedCultureDto,
@@ -65,7 +64,7 @@ export class PlantedCulturesService {
     });
 
     if (!plantedCulture) {
-      throw new Error('Cultura plantada não encontrada');
+      this.messagePlantedCultureNotFound(id);
     }
 
     const updateData: Partial<PlantedCulture> = {
@@ -85,7 +84,7 @@ export class PlantedCulturesService {
     const plantedCulture = await this.plantedCultureRepo.delete({ id });
 
     if (plantedCulture.affected === 0) {
-      throw new Error(`Cultura plantada com ID ${id} não encontrada`);
+      this.messagePlantedCultureNotFound(id);
     }
   }
 
@@ -101,7 +100,24 @@ export class PlantedCulturesService {
     const isUniqueName = await this.isUniqueName(name);
 
     if (!isUniqueName) {
-      throw new Error('Nome já cadastrado');
+      throw new BadRequestException({
+        message: `Nome já cadastrado`,
+        details: {
+          name,
+          suggestion: 'Escolha outro nome para a cultura plantada.',
+        },
+      });
     }
+  }
+
+  private messagePlantedCultureNotFound(id: number): never {
+    throw new NotFoundException({
+      message: `Cultura plantada não encontrada`,
+      details: {
+        id,
+        suggestion:
+          'Verifique se o ID está correto ou liste as cultura plantada disponíveis primeiro',
+      },
+    });
   }
 }

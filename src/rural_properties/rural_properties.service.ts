@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRuralPropertyDto } from './dto/create-rural_property.dto';
 import { UpdateRuralPropertyDto } from './dto/update-rural_property.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RuralProperty } from './entities/rural_property.entity';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { UserValidationService } from '../common/services/user-validation.service';
 
 @Injectable()
 export class RuralPropertiesService {
@@ -13,6 +14,7 @@ export class RuralPropertiesService {
     private ruralPropertyRepo: Repository<RuralProperty>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private readonly userValidationService: UserValidationService,
   ) {}
 
   async create(
@@ -24,19 +26,10 @@ export class RuralPropertiesService {
       Number(createRuralPropertyDto.vegetation_area);
 
     if (sumArea > createRuralPropertyDto.total_area) {
-      throw new Error(
-        'Área total não pode ser maior que a soma das áreas agricultável e vegetação',
-      );
+      this.messageAreaTotalCanNotBeGreater();
     }
 
-    const user = await this.userRepo.findOne({
-      where: { id: Number(userId) },
-      select: ['id'],
-    });
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
+    const user = await this.userValidationService.validateUserId(userId);
 
     const newRuralProperty = this.ruralPropertyRepo.create({
       ...createRuralPropertyDto,
@@ -69,7 +62,7 @@ export class RuralPropertiesService {
     });
 
     if (!ruralProperty) {
-      throw new Error('Propriedade rural não encontrada');
+      this.messageRuralPropertyNotFound(id);
     }
 
     const updateData: Partial<RuralProperty> = {
@@ -87,9 +80,7 @@ export class RuralPropertiesService {
       Number(updatedRuralProperty.vegetation_area);
 
     if (sumArea > updatedRuralProperty.total_area) {
-      throw new Error(
-        'Área total não pode ser maior que a soma das áreas agricultável e vegetação',
-      );
+      this.messageAreaTotalCanNotBeGreater();
     }
 
     return await this.ruralPropertyRepo.save(updatedRuralProperty);
@@ -99,7 +90,28 @@ export class RuralPropertiesService {
     const ruralProperty = await this.ruralPropertyRepo.delete({ id });
 
     if (ruralProperty.affected === 0) {
-      throw new Error(`Propriedade rural com ID ${id} não encontrada`);
+      this.messageRuralPropertyNotFound(id);
     }
+  }
+
+  private messageRuralPropertyNotFound(id: number): never {
+    throw new NotFoundException({
+      message: `Propriedade rural não encontrada`,
+      details: {
+        id,
+        suggestion:
+          'Verifique se o ID está correto ou liste as propriedade rural disponíveis primeiro',
+      },
+    });
+  }
+
+  private messageAreaTotalCanNotBeGreater(): never {
+    throw new NotFoundException({
+      message: `Área total não pode ser maior que a soma das áreas agricultável e vegetação`,
+      details: {
+        suggestion:
+          'Verifique os valores das áreas agricultável e vegetação e tente novamente.',
+      },
+    });
   }
 }

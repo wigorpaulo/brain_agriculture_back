@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProducerDto } from './dto/create-producer.dto';
 import { UpdateProducerDto } from './dto/update-producer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Producer } from './entities/producer.entity';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { UserValidationService } from '../common/services/user-validation.service';
 
 @Injectable()
 export class ProducersService {
@@ -13,22 +18,16 @@ export class ProducersService {
     private producerRepo: Repository<Producer>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private readonly userValidationService: UserValidationService,
   ) {}
 
   async create(
     createProducerDto: CreateProducerDto,
     userId: string | number,
   ): Promise<Omit<Producer, 'created_by'>> {
-    await this.validateCpfCnpjUnique(createProducerDto.name);
+    await this.validateCpfCnpjUnique(createProducerDto.cpf_cnpj);
 
-    const user = await this.userRepo.findOne({
-      where: { id: Number(userId) },
-      select: ['id'],
-    });
-
-    if (!user) {
-      throw new Error('Usuário não encontrado');
-    }
+    const user = await this.userValidationService.validateUserId(userId);
 
     const newProducer = this.producerRepo.create({
       ...createProducerDto,
@@ -55,14 +54,14 @@ export class ProducersService {
     id: number,
     updateProducerDto: UpdateProducerDto,
   ): Promise<Producer> {
-    if (updateProducerDto.name) {
-      await this.validateCpfCnpjUnique(updateProducerDto.name);
+    if (updateProducerDto.cpf_cnpj) {
+      await this.validateCpfCnpjUnique(updateProducerDto.cpf_cnpj);
     }
 
     const producer = await this.producerRepo.findOne({ where: { id } });
 
     if (!producer) {
-      throw new Error('Produtor não encontrado');
+      this.messageProducerNotFound(id);
     }
 
     const updateData: Partial<Producer> = {
@@ -79,7 +78,7 @@ export class ProducersService {
     const producer = await this.producerRepo.delete({ id });
 
     if (producer.affected === 0) {
-      throw new Error(`Produtor com ID ${id} não encontrado`);
+      this.messageProducerNotFound(id);
     }
   }
 
@@ -91,11 +90,28 @@ export class ProducersService {
     return exist === 0;
   }
 
-  private async validateCpfCnpjUnique(name: string): Promise<void> {
-    const isUniqueCpfCnpj = await this.isUniqueCpfCnpj(name);
+  private async validateCpfCnpjUnique(cpf_cnpj: string): Promise<void> {
+    const isUniqueCpfCnpj = await this.isUniqueCpfCnpj(cpf_cnpj);
 
     if (!isUniqueCpfCnpj) {
-      throw new Error('CPF ou CNPJ já cadastrado');
+      throw new BadRequestException({
+        message: `CPF ou CNPJ já cadastrado`,
+        details: {
+          cpf_cnpj,
+          suggestion: 'Escolha outro CPF ou CNPJ para o produtor.',
+        },
+      });
     }
+  }
+
+  private messageProducerNotFound(id: number): never {
+    throw new NotFoundException({
+      message: `Produtor não encontrada`,
+      details: {
+        id,
+        suggestion:
+          'Verifique se o ID está correto ou liste os produtor disponíveis primeiro',
+      },
+    });
   }
 }
