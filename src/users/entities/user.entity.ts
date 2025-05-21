@@ -3,6 +3,7 @@ import { Harvest } from '../../harvests/entities/harvest.entity';
 import { PlantedCulture } from '../../planted_cultures/entities/planted_culture.entity';
 import { Producer } from '../../producers/entities/producer.entity';
 import { RuralProperty } from '../../rural_properties/entities/rural_property.entity';
+import { Cultivation } from '../../cultivations/entities/cultivation.entity';
 
 @Entity('users')
 export class User {
@@ -32,6 +33,9 @@ export class User {
 
   @OneToMany(() => RuralProperty, (rural_property) => rural_property.created_by)
   rural_properties: RuralProperty[];
+
+  @OneToMany(() => Cultivation, (cultivation) => cultivation.created_by)
+  cultivations: Cultivation[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
