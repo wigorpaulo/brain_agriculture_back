@@ -1,52 +1,64 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateRuralPropertyDto } from './dto/create-rural_property.dto';
 import { UpdateRuralPropertyDto } from './dto/update-rural_property.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RuralProperty } from './entities/rural_property.entity';
 import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
 import { UserValidationService } from '../common/services/user-validation.service';
+import { ProducerValidationService } from '../common/services/producer-validation.service';
+import { RuralPropertyValidationService } from '../common/services/rural_property-validation.service';
+import { CityValidationService } from '../common/services/city-validation.service';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class RuralPropertiesService {
   constructor(
     @InjectRepository(RuralProperty)
-    private ruralPropertyRepo: Repository<RuralProperty>,
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
+    private readonly ruralPropertyRepo: Repository<RuralProperty>,
     private readonly userValidationService: UserValidationService,
+    private readonly producerValidationService: ProducerValidationService,
+    private readonly ruralPropertyValidationService: RuralPropertyValidationService,
+    private readonly cityValidationService: CityValidationService,
   ) {}
 
   async create(
     createRuralPropertyDto: CreateRuralPropertyDto,
     userId: string | number,
-  ): Promise<Omit<RuralProperty, 'created_by'>> {
-    const sumArea =
-      Number(createRuralPropertyDto.arable_area) +
-      Number(createRuralPropertyDto.vegetation_area);
+  ): Promise<Record<string, any>> {
+    this.ruralPropertyValidationService.validateAreaTotalCanNotBeGreater(
+      createRuralPropertyDto.arable_area,
+      createRuralPropertyDto.vegetation_area,
+      createRuralPropertyDto.total_area,
+    );
 
-    if (sumArea > createRuralPropertyDto.total_area) {
-      this.messageAreaTotalCanNotBeGreater();
-    }
+    const user = await this.userValidationService.validate(userId);
 
-    const user = await this.userValidationService.validateUserId(userId);
+    const producer = await this.producerValidationService.validate(
+      createRuralPropertyDto.producerId,
+    );
+
+    const city = await this.cityValidationService.validate(
+      createRuralPropertyDto.cityId,
+    );
 
     const newRuralProperty = this.ruralPropertyRepo.create({
       ...createRuralPropertyDto,
+      producer: producer,
+      city: city,
       created_by: user,
       created_at: new Date(),
       updated_at: new Date(),
     });
 
-    const savedRuralProperty =
-      await this.ruralPropertyRepo.save(newRuralProperty);
-
-    const { created_by: _created_by, ...result } = savedRuralProperty;
-    return result;
+    return instanceToPlain(await this.ruralPropertyRepo.save(newRuralProperty));
   }
 
-  async findAll(): Promise<RuralProperty[]> {
-    return await this.ruralPropertyRepo.find();
+  async findAll(): Promise<Record<string, any>> {
+    const ruralProperties = await this.ruralPropertyRepo.find({
+      relations: ['producer', 'city', 'created_by'],
+    });
+
+    return instanceToPlain(ruralProperties);
   }
 
   async findOne(id: number): Promise<RuralProperty | null> {
@@ -57,13 +69,8 @@ export class RuralPropertiesService {
     id: number,
     updateRuralPropertyDto: UpdateRuralPropertyDto,
   ): Promise<RuralProperty> {
-    const ruralProperty = await this.ruralPropertyRepo.findOne({
-      where: { id },
-    });
-
-    if (!ruralProperty) {
-      this.messageRuralPropertyNotFound(id);
-    }
+    const ruralProperty =
+      await this.ruralPropertyValidationService.validate(id);
 
     const updateData: Partial<RuralProperty> = {
       ...updateRuralPropertyDto,
@@ -75,43 +82,19 @@ export class RuralPropertiesService {
       updateData,
     );
 
-    const sumArea =
-      Number(updatedRuralProperty.arable_area) +
-      Number(updatedRuralProperty.vegetation_area);
-
-    if (sumArea > updatedRuralProperty.total_area) {
-      this.messageAreaTotalCanNotBeGreater();
-    }
+    this.ruralPropertyValidationService.validateAreaTotalCanNotBeGreater(
+      updatedRuralProperty.arable_area,
+      updatedRuralProperty.vegetation_area,
+      updatedRuralProperty.total_area,
+    );
 
     return await this.ruralPropertyRepo.save(updatedRuralProperty);
   }
 
   async remove(id: number): Promise<void> {
-    const ruralProperty = await this.ruralPropertyRepo.delete({ id });
+    const ruralProperty =
+      await this.ruralPropertyValidationService.validate(id);
 
-    if (ruralProperty.affected === 0) {
-      this.messageRuralPropertyNotFound(id);
-    }
-  }
-
-  private messageRuralPropertyNotFound(id: number): never {
-    throw new NotFoundException({
-      message: `Propriedade rural não encontrada`,
-      details: {
-        id,
-        suggestion:
-          'Verifique se o ID está correto ou liste as propriedade rural disponíveis primeiro',
-      },
-    });
-  }
-
-  private messageAreaTotalCanNotBeGreater(): never {
-    throw new NotFoundException({
-      message: `Área total não pode ser maior que a soma das áreas agricultável e vegetação`,
-      details: {
-        suggestion:
-          'Verifique os valores das áreas agricultável e vegetação e tente novamente.',
-      },
-    });
+    await this.ruralPropertyRepo.remove(ruralProperty);
   }
 }

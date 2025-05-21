@@ -7,7 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { CommonModule } from '../common/common.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Harvest, User]), CommonModule],
+  imports: [TypeOrmModule.forFeature([Harvest]), CommonModule],
   controllers: [HarvestsController],
   providers: [HarvestsService],
 })

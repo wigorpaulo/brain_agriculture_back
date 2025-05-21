@@ -4,6 +4,7 @@ import { PlantedCulture } from '../../planted_cultures/entities/planted_culture.
 import { Producer } from '../../producers/entities/producer.entity';
 import { RuralProperty } from '../../rural_properties/entities/rural_property.entity';
 import { Cultivation } from '../../cultivations/entities/cultivation.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
@@ -16,6 +17,7 @@ export class User {
   @Column({ type: 'varchar' })
   email: string;
 
+  @Exclude()
   @Column({ type: 'varchar' })
   password: string;
 

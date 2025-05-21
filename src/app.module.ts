@@ -12,6 +12,7 @@ import { PlantedCulturesModule } from './planted_cultures/planted_cultures.modul
 import { ProducersModule } from './producers/producers.module';
 import { RuralPropertiesModule } from './rural_properties/rural_properties.module';
 import { CultivationsModule } from './cultivations/cultivations.module';
+import { DashboardsModule } from './dashboards/dashboards.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { CultivationsModule } from './cultivations/cultivations.module';
     ProducersModule,
     RuralPropertiesModule,
     CultivationsModule,
+    DashboardsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

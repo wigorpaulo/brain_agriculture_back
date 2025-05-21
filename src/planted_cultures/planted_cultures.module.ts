@@ -7,7 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { CommonModule } from '../common/common.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PlantedCulture, User]), CommonModule],
+  imports: [TypeOrmModule.forFeature([PlantedCulture]), CommonModule],
   controllers: [PlantedCulturesController],
   providers: [PlantedCulturesService],
 })
