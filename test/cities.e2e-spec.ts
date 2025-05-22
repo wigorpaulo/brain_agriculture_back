@@ -9,7 +9,8 @@ import { State } from '../src/states/entities/state.entity';
 import { CitiesModule } from '../src/cities/cities.module';
 import { User } from '../src/users/entities/user.entity';
 import { CreateUserDto } from '../src/users/dto/create-user.dto';
-import { loginUser, authHeader} from './test-utils/auth-helper';
+import { loginUser, authHeader } from './test-utils/auth-helper';
+import { UpdateCityDto } from '../src/cities/dto/update-city.dto';
 
 describe('CitiesController (e2e)', () => {
   let app: INestApplication;
@@ -207,6 +208,129 @@ describe('CitiesController (e2e)', () => {
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(1);
       expect(response.body[0].name).toBe('Curitiba');
+    });
+  });
+
+  describe('GET /cities/:id', () => {
+    let accessToken: string;
+
+    beforeEach(async () => {
+      const createUserDto: CreateUserDto = {
+        name: 'João Silva',
+        email: 'joao.silva@example.com',
+        password: '123456',
+      };
+
+      const user = await loginUser(app, createUserDto);
+
+      accessToken = user.accessToken;
+    });
+
+    it('should return a city', async () => {
+      const stateRes = await request(app.getHttpServer())
+        .post('/states')
+        .send({ uf: 'PR', name: 'Paraná' })
+        .set(authHeader(accessToken))
+        .expect(201);
+
+      const stateId = stateRes.body.id;
+
+      const cityRes = await request(app.getHttpServer())
+        .post('/cities')
+        .send({ name: 'Curitiba', state_id: stateId })
+        .set(authHeader(accessToken))
+        .expect(201);
+
+      const cityId = cityRes.body.id;
+
+      const response = await request(app.getHttpServer())
+        .get(`/cities/${cityId}`)
+        .set(authHeader(accessToken))
+
+      expect(response.status).toBe(200);
+    });
+  });
+
+  describe('PATCH /cities/:id', () => {
+    let accessToken: string;
+
+    beforeEach(async () => {
+      const createUserDto: CreateUserDto = {
+        name: 'João Silva',
+        email: 'joao.silva@example.com',
+        password: '123456',
+      };
+
+      const user = await loginUser(app, createUserDto);
+
+      accessToken = user.accessToken;
+    });
+
+    it('should successfully update a city', async () => {
+      const stateRes = await request(app.getHttpServer())
+        .post('/states')
+        .send({ uf: 'PR', name: 'Paraná' })
+        .set(authHeader(accessToken))
+        .expect(201);
+
+      const stateId = stateRes.body.id;
+
+      const cityRes = await request(app.getHttpServer())
+        .post('/cities')
+        .send({ name: 'Curitiba', state_id: stateId })
+        .set(authHeader(accessToken))
+        .expect(201);
+
+      const cityId = cityRes.body.id;
+
+      const updateDto: UpdateCityDto = { name: 'Piracicaba Nova' };
+
+      const response = await request(app.getHttpServer())
+        .patch(`/cities/${cityId}`)
+        .set(authHeader(accessToken))
+        .send(updateDto);
+
+      expect(response.status).toBe(200);
+    });
+  });
+
+  describe('DELETE /cities/:id', () => {
+    let accessToken: string;
+
+    beforeEach(async () => {
+      const createUserDto: CreateUserDto = {
+        name: 'João Silva',
+        email: 'joao.silva@example.com',
+        password: '123456',
+      };
+
+      const user = await loginUser(app, createUserDto);
+
+      accessToken = user.accessToken;
+    });
+
+    it('should successfully delete a city', async () => {
+      const stateRes = await request(app.getHttpServer())
+        .post('/states')
+        .send({ uf: 'PR', name: 'Paraná' })
+        .set(authHeader(accessToken))
+        .expect(201);
+
+      const stateId = stateRes.body.id;
+
+      const cityRes = await request(app.getHttpServer())
+        .post('/cities')
+        .send({ name: 'Curitiba', state_id: stateId })
+        .set(authHeader(accessToken))
+        .expect(201);
+
+      const cityId = cityRes.body.id;
+
+      const response = await request(app.getHttpServer())
+        .delete(`/cities/${cityId}`)
+        .set(authHeader(accessToken));
+
+      expect(response.status).toBe(200);
     });
   });
 });
