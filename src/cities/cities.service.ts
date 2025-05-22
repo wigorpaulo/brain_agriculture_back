@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateCityDto } from './dto/create-city.dto';
 import { UpdateCityDto } from './dto/update-city.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +10,8 @@ import { State } from '../states/entities/state.entity';
 
 @Injectable()
 export class CitiesService {
+  private readonly logger = new Logger(CitiesService.name);
+
   constructor(
     @InjectRepository(City)
     private readonly cityRepo: Repository<City>,
@@ -31,6 +33,7 @@ export class CitiesService {
       updated_at: new Date(),
     });
 
+    this.logger.log('City created successfully.');
     return await this.cityRepo.save(newCity);
   }
 
@@ -69,12 +72,14 @@ export class CitiesService {
 
     const updatedCity = this.cityRepo.merge(city, updateData);
 
+    this.logger.log('City updated successfully.');
     return await this.cityRepo.save(updatedCity);
   }
 
   async remove(id: number): Promise<void> {
     const city = await this.cityValidationService.validate(id);
 
+    this.logger.log('City deleted successfully.');
     await this.cityRepo.remove(city);
   }
 }

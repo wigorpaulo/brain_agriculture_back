@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateCultivationDto } from './dto/create-cultivation.dto';
 import { UpdateCultivationDto } from './dto/update-cultivation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,6 +16,8 @@ import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class CultivationsService {
+  private readonly logger = new Logger(CultivationsService.name);
+
   constructor(
     @InjectRepository(Cultivation)
     private readonly cultivationRepo: Repository<Cultivation>,
@@ -54,6 +56,7 @@ export class CultivationsService {
       updated_at: new Date(),
     });
 
+    this.logger.log('Cultivation created successfully.');
     return instanceToPlain(await this.cultivationRepo.save(newCultivation));
   }
 
@@ -118,12 +121,14 @@ export class CultivationsService {
       updateData,
     );
 
+    this.logger.log('Cultivation updated successfully.');
     return await this.cultivationRepo.save(updatedCultivation);
   }
 
   async remove(id: number): Promise<void> {
     const cultivation = await this.cultivationValidationService.validate(id);
 
+    this.logger.log('Cultivation deleted successfully.');
     await this.cultivationRepo.remove(cultivation);
   }
 }

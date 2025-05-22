@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateHarvestDto } from './dto/create-harvest.dto';
 import { UpdateHarvestDto } from './dto/update-harvest.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +10,8 @@ import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class HarvestsService {
+  private readonly logger = new Logger(HarvestsService.name);
+
   constructor(
     @InjectRepository(Harvest)
     private readonly harvestRepo: Repository<Harvest>,
@@ -34,6 +36,7 @@ export class HarvestsService {
       updated_at: new Date(),
     });
 
+    this.logger.log('Harvest created successfully.');
     return await this.harvestRepo.save(newHarvest);
   }
 
@@ -68,12 +71,14 @@ export class HarvestsService {
 
     const updatedHarvest = this.harvestRepo.merge(harvest, updateData);
 
+    this.logger.log('Harvest updated successfully.');
     return await this.harvestRepo.save(updatedHarvest);
   }
 
   async remove(id: number): Promise<void> {
     const harvest = await this.harvestValidationService.validate(id);
 
+    this.logger.log('Harvest deleted successfully.');
     await this.harvestRepo.remove(harvest);
   }
 }

@@ -44,7 +44,10 @@ describe('PlantedCulturesController (e2e)', () => {
   });
 
   afterAll(async () => {
-    await dataSource.destroy();
+    if (dataSource) {
+      await dataSource.destroy();
+    }
+
     await app.close();
   }, 10000);
 

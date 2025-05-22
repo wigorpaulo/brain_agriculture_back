@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateStateDto } from './dto/create-state.dto';
 import { UpdateStateDto } from './dto/update-state.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,6 +8,8 @@ import { StateValidationService } from '../common/services/state-validation.serv
 
 @Injectable()
 export class StatesService {
+  private readonly logger = new Logger(StatesService.name);
+
   constructor(
     @InjectRepository(State)
     private readonly stateRepo: Repository<State>,
@@ -22,6 +24,7 @@ export class StatesService {
       updated_at: new Date(),
     });
 
+    this.logger.log('State created successfully.');
     return await this.stateRepo.save(newState);
   }
 
@@ -47,12 +50,14 @@ export class StatesService {
 
     const updatedState = this.stateRepo.merge(state, updateData);
 
+    this.logger.log('State updated successfully.');
     return await this.stateRepo.save(updatedState);
   }
 
   async remove(id: number): Promise<void> {
     const state = await this.stateValidationService.validate(id);
 
+    this.logger.log('State deleted successfully.');
     await this.stateRepo.remove(state);
   }
 }

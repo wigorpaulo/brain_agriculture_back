@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateRuralPropertyDto } from './dto/create-rural_property.dto';
 import { UpdateRuralPropertyDto } from './dto/update-rural_property.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,6 +12,8 @@ import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class RuralPropertiesService {
+  private readonly logger = new Logger(RuralPropertiesService.name);
+
   constructor(
     @InjectRepository(RuralProperty)
     private readonly ruralPropertyRepo: Repository<RuralProperty>,
@@ -50,6 +52,7 @@ export class RuralPropertiesService {
       updated_at: new Date(),
     });
 
+    this.logger.log('Rural property created successfully.');
     return instanceToPlain(await this.ruralPropertyRepo.save(newRuralProperty));
   }
 
@@ -88,6 +91,7 @@ export class RuralPropertiesService {
       updatedRuralProperty.total_area,
     );
 
+    this.logger.log('Rural property updated successfully.');
     return await this.ruralPropertyRepo.save(updatedRuralProperty);
   }
 
@@ -95,6 +99,7 @@ export class RuralPropertiesService {
     const ruralProperty =
       await this.ruralPropertyValidationService.validate(id);
 
+    this.logger.log('Rural property deleted successfully.');
     await this.ruralPropertyRepo.remove(ruralProperty);
   }
 }
