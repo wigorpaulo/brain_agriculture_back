@@ -7,6 +7,8 @@ import { UsersModule } from '../src/users/users.module';
 import { AuthModule } from '../src/auth/auth.module';
 import { City } from '../src/cities/entities/city.entity';
 import { State } from '../src/states/entities/state.entity';
+import { HarvestsModule } from '../src/harvests/harvests.module';
+import { Harvest } from '../src/harvests/entities/harvest.entity';
 // importe outros módulos que deseja testar
 
 @Module({
@@ -30,11 +32,12 @@ import { State } from '../src/states/entities/state.entity';
         dropSchema: true, // recria o schema a cada execução de teste
       }),
     }),
-    TypeOrmModule.forFeature([City, State]),
+    TypeOrmModule.forFeature([City, State, Harvest]),
     CitiesModule,
     StatesModule,
     UsersModule,
     AuthModule,
+    HarvestsModule,
     // outros módulos aqui
   ],
   exports: [TypeOrmModule],
