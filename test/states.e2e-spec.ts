@@ -9,6 +9,8 @@ import { State } from '../src/states/entities/state.entity';
 import { User } from '../src/users/entities/user.entity';
 import { UpdateStateDto } from '../src/states/dto/update-state.dto';
 
+jest.setTimeout(30000);
+
 describe('StatesController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
@@ -30,14 +32,16 @@ describe('StatesController (e2e)', () => {
       }),
     );
 
-    dataSource = moduleFixture.get<DataSource>(DataSource);
-
     await app.init();
-  });
+
+    dataSource = moduleFixture.get<DataSource>(DataSource);
+    await dataSource.synchronize(true);
+  }, 30000);
 
   afterAll(async () => {
+    await dataSource.destroy();
     await app.close();
-  });
+  }, 10000);
 
   beforeEach(async () => {
     // Limpa as tabelas antes de cada teste

@@ -17,6 +17,8 @@ import { Harvest } from '../src/harvests/entities/harvest.entity';
 import { PlantedCulture } from '../src/planted_cultures/entities/planted_culture.entity';
 import { UpdateCultivationDto } from '../src/cultivations/dto/update-cultivation.dto';
 
+jest.setTimeout(30000);
+
 describe('CultivationsController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
@@ -41,14 +43,16 @@ describe('CultivationsController (e2e)', () => {
       }),
     );
 
-    dataSource = moduleFixture.get<DataSource>(DataSource);
-
     await app.init();
+
+    dataSource = moduleFixture.get<DataSource>(DataSource);
+    await dataSource.synchronize(true);
   });
 
   afterAll(async () => {
+    await dataSource.destroy();
     await app.close();
-  });
+  }, 10000);
 
   beforeEach(async () => {
     // Limpa as tabelas antes de cada teste

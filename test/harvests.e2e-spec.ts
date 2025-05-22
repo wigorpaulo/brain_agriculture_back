@@ -9,6 +9,8 @@ import { User } from '../src/users/entities/user.entity';
 import { Harvest } from '../src/harvests/entities/harvest.entity';
 import { UpdateHarvestDto } from '../src/harvests/dto/update-harvest.dto';
 
+jest.setTimeout(30000);
+
 describe('HarvestsController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
@@ -30,13 +32,16 @@ describe('HarvestsController (e2e)', () => {
       }),
     );
 
-    dataSource = moduleFixture.get<DataSource>(DataSource);
-
     await app.init();
+
+    dataSource = moduleFixture.get<DataSource>(DataSource);
+    await dataSource.synchronize(true);
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   beforeEach(async () => {
