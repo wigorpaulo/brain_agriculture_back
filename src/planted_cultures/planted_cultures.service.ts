@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreatePlantedCultureDto } from './dto/create-planted_culture.dto';
 import { UpdatePlantedCultureDto } from './dto/update-planted_culture.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +10,8 @@ import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class PlantedCulturesService {
+  private readonly logger = new Logger(PlantedCulturesService.name);
+
   constructor(
     @InjectRepository(PlantedCulture)
     private readonly plantedCultureRepo: Repository<PlantedCulture>,
@@ -34,6 +36,7 @@ export class PlantedCulturesService {
       updated_at: new Date(),
     });
 
+    this.logger.log('PLanted culture created successfully.');
     return instanceToPlain(
       await this.plantedCultureRepo.save(newPlantedCulture),
     );
@@ -74,6 +77,7 @@ export class PlantedCulturesService {
       updateData,
     );
 
+    this.logger.log('PLanted culture updated successfully.');
     return await this.plantedCultureRepo.save(updatedPlantedCulture);
   }
 
@@ -81,6 +85,7 @@ export class PlantedCulturesService {
     const plantedCulture =
       await this.plantedCultureValidationService.validate(id);
 
+    this.logger.log('PLanted culture deleted successfully.');
     await this.plantedCultureRepo.remove(plantedCulture);
   }
 }

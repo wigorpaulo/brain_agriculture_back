@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -9,6 +9,8 @@ import { UserValidationService } from '../common/services/user-validation.servic
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
@@ -27,6 +29,7 @@ export class UsersService {
       updated_at: new Date(),
     });
 
+    this.logger.log('User created successfully.');
     return await this.userRepo.save(newUser);
   }
 
@@ -48,6 +51,7 @@ export class UsersService {
 
     const updatedUser = this.userRepo.merge(user, updateData);
 
+    this.logger.log('User updated successfully.');
     return await this.userRepo.save(updatedUser);
   }
 
