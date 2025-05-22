@@ -17,6 +17,7 @@ import { RuralPropertiesModule } from '../src/rural_properties/rural_properties.
 import { RuralProperty } from '../src/rural_properties/entities/rural_property.entity';
 import { CultivationsModule } from '../src/cultivations/cultivations.module';
 import { Cultivation } from '../src/cultivations/entities/cultivation.entity';
+import { DashboardsModule } from '../src/dashboards/dashboards.module';
 // importe outros módulos que deseja testar
 
 @Module({
@@ -40,7 +41,15 @@ import { Cultivation } from '../src/cultivations/entities/cultivation.entity';
         dropSchema: true, // recria o schema a cada execução de teste
       }),
     }),
-    TypeOrmModule.forFeature([City, State, Harvest, PlantedCulture, Producer, RuralProperty, Cultivation]),
+    TypeOrmModule.forFeature([
+      City,
+      State,
+      Harvest,
+      PlantedCulture,
+      Producer,
+      RuralProperty,
+      Cultivation,
+    ]),
     CitiesModule,
     StatesModule,
     UsersModule,
@@ -50,6 +59,7 @@ import { Cultivation } from '../src/cultivations/entities/cultivation.entity';
     ProducersModule,
     RuralPropertiesModule,
     CultivationsModule,
+    DashboardsModule,
     // outros módulos aqui
   ],
   exports: [TypeOrmModule],
