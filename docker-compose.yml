@@ -11,7 +11,7 @@ services:
     networks:
       - api_network
 
-  dp:
+  db:
     image: postgres:17
     container_name: postgres_db
     restart: always
