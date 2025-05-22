@@ -5,7 +5,6 @@ import { HarvestsController } from './harvests.controller';
 import { HarvestsService } from './harvests.service';
 import { CreateHarvestDto } from './dto/create-harvest.dto';
 import { UpdateHarvestDto } from './dto/update-harvest.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { Harvest } from './entities/harvest.entity';
 import { User } from '../users/entities/user.entity';
