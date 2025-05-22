@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
+import { CreateUserDto } from '../../src/users/dto/create-user.dto';
 
 export type AuthenticatedUser = {
   accessToken: string;
@@ -39,6 +40,17 @@ export async function loginUser(
   return {
     accessToken: loginResponse.body.access_token,
   };
+}
+
+export async function setupAuthUser(app: INestApplication): Promise<string> {
+  const createUserDto: CreateUserDto = {
+    name: 'João Silva',
+    email: 'joao.silva@example.com',
+    password: '123456',
+  };
+
+  const user = await loginUser(app, createUserDto);
+  return user.accessToken;
 }
 
 /**

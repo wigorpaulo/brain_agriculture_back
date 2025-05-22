@@ -8,13 +8,13 @@ import { City } from '../src/cities/entities/city.entity';
 import { State } from '../src/states/entities/state.entity';
 import { CitiesModule } from '../src/cities/cities.module';
 import { User } from '../src/users/entities/user.entity';
-import { CreateUserDto } from '../src/users/dto/create-user.dto';
-import { loginUser, authHeader } from './test-utils/auth-helper';
+import { authHeader, setupAuthUser } from './test-utils/auth-helper';
 import { UpdateCityDto } from '../src/cities/dto/update-city.dto';
 
 describe('CitiesController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
+  let accessToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -49,23 +49,11 @@ describe('CitiesController (e2e)', () => {
       User,
       // adicione outras entidades conforme necessário
     ]);
+
+    accessToken = await setupAuthUser(app);
   });
 
   describe('POST /cities', () => {
-    let accessToken: string;
-
-    beforeEach(async () => {
-      const createUserDto: CreateUserDto = {
-        name: 'João Silva',
-        email: 'joao.silva@example.com',
-        password: '123456',
-      };
-
-      const user = await loginUser(app, createUserDto);
-
-      accessToken = user.accessToken;
-    });
-
     it('should successfully create a city', async () => {
       const stateRes = await request(app.getHttpServer())
         .post('/states')
@@ -163,20 +151,6 @@ describe('CitiesController (e2e)', () => {
   });
 
   describe('GET /cities', () => {
-    let accessToken: string;
-
-    beforeEach(async () => {
-      const createUserDto: CreateUserDto = {
-        name: 'João Silva',
-        email: 'joao.silva@example.com',
-        password: '123456',
-      };
-
-      const user = await loginUser(app, createUserDto);
-
-      accessToken = user.accessToken;
-    });
-
     it('should return an empty list if there are no cities', async () => {
       const response = await request(app.getHttpServer())
         .get('/cities')
@@ -212,20 +186,6 @@ describe('CitiesController (e2e)', () => {
   });
 
   describe('GET /cities/:id', () => {
-    let accessToken: string;
-
-    beforeEach(async () => {
-      const createUserDto: CreateUserDto = {
-        name: 'João Silva',
-        email: 'joao.silva@example.com',
-        password: '123456',
-      };
-
-      const user = await loginUser(app, createUserDto);
-
-      accessToken = user.accessToken;
-    });
-
     it('should return a city', async () => {
       const stateRes = await request(app.getHttpServer())
         .post('/states')
@@ -252,20 +212,6 @@ describe('CitiesController (e2e)', () => {
   });
 
   describe('PATCH /cities/:id', () => {
-    let accessToken: string;
-
-    beforeEach(async () => {
-      const createUserDto: CreateUserDto = {
-        name: 'João Silva',
-        email: 'joao.silva@example.com',
-        password: '123456',
-      };
-
-      const user = await loginUser(app, createUserDto);
-
-      accessToken = user.accessToken;
-    });
-
     it('should successfully update a city', async () => {
       const stateRes = await request(app.getHttpServer())
         .post('/states')
@@ -295,20 +241,6 @@ describe('CitiesController (e2e)', () => {
   });
 
   describe('DELETE /cities/:id', () => {
-    let accessToken: string;
-
-    beforeEach(async () => {
-      const createUserDto: CreateUserDto = {
-        name: 'João Silva',
-        email: 'joao.silva@example.com',
-        password: '123456',
-      };
-
-      const user = await loginUser(app, createUserDto);
-
-      accessToken = user.accessToken;
-    });
-
     it('should successfully delete a city', async () => {
       const stateRes = await request(app.getHttpServer())
         .post('/states')
