@@ -2,17 +2,20 @@ FROM node:22.15.0-alpine3.21 AS builder
 
 WORKDIR /app
 
+# Copia os arquivos de dependência
 COPY package*.json ./
+
+# Instala as dependências
 RUN npm install
+
+# Copia o restante dos arquivos do projeto
 COPY . .
+
+# Compila o projeto
 RUN npm run build
 
-FROM node:22.15.0-alpine3.21
+# Expõe a porta da aplicação NestJS
+EXPOSE 3000
 
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --production
-
-COPY --from=builder /app/dist ./dist
-
-CMD ["node", "dist/main"]
+# Comando para rodar a aplicação
+CMD ["npm", "run", "start:prod"]

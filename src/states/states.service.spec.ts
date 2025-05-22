@@ -6,19 +6,12 @@ import { Repository } from 'typeorm';
 import { StateValidationService } from '../common/services/state-validation.service';
 import { CreateStateDto } from './dto/create-state.dto';
 import { UpdateStateDto } from './dto/update-state.dto';
+import { mockState } from '../../test/mocks/state.mock';
 
 describe('StatesService', () => {
   let service: StatesService;
   let repo: jest.Mocked<Repository<State>>;
   let validationService: jest.Mocked<StateValidationService>;
-
-  const mockState = {
-    id: 1,
-    name: 'São Paulo',
-    uf: 'SP',
-    created_at: new Date(),
-    updated_at: new Date(),
-  } as State;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
