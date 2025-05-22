@@ -13,7 +13,7 @@ services:
 
   dp:
     image: postgres:17
-    container_name: db
+    container_name: postgres_db
     restart: always
     environment:
       POSTGRES_USER: postgres
