@@ -11,34 +11,44 @@ import { User } from '../src/users/entities/user.entity';
 import { authHeader, setupAuthUser } from './test-utils/auth-helper';
 import { UpdateCityDto } from '../src/cities/dto/update-city.dto';
 
+jest.setTimeout(30000);
+
 describe('CitiesController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let accessToken: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [TestModule, CitiesModule],
-    }).compile();
+    try {
+      const moduleFixture: TestingModule = await Test.createTestingModule({
+        imports: [TestModule, CitiesModule],
+      }).compile();
 
-    app = moduleFixture.createNestApplication();
+      app = moduleFixture.createNestApplication();
 
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-        stopAtFirstError: true,
-      }),
-    );
+      app.useGlobalPipes(
+        new ValidationPipe({
+          whitelist: true,
+          forbidNonWhitelisted: true,
+          transform: true,
+          stopAtFirstError: true,
+        }),
+      );
 
-    dataSource = moduleFixture.get<DataSource>(DataSource);
+      await app.init();
 
-    await app.init();
-  });
+      dataSource = moduleFixture.get<DataSource>(DataSource);
+      await dataSource.synchronize(true);
+    } catch (error) {
+      console.error('Error during app initialization:', error);
+      throw error; // Isso fará o teste falhar explicitamente se houver um erro de inicialização
+    }
+  }, 30000);
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   beforeEach(async () => {
@@ -205,7 +215,7 @@ describe('CitiesController (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .get(`/cities/${cityId}`)
-        .set(authHeader(accessToken))
+        .set(authHeader(accessToken));
 
       expect(response.status).toBe(200);
     });

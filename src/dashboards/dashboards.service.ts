@@ -35,6 +35,8 @@ export class DashboardsService {
       .groupBy('s.name')
       .getRawMany<{ state: string; total_rural_properties: string }>();
 
+    const byState = ruralPropertiesByState || [];
+
     const ruralPropertiesByPlantedCulture = await this.cultivationRepo
       .createQueryBuilder('c')
       .innerJoin('c.planted_culture', 'pc')
@@ -42,6 +44,8 @@ export class DashboardsService {
       .addSelect('COUNT(c.id)', 'total_cultivations')
       .groupBy('pc.name')
       .getRawMany<{ planted_culture: string; total_cultivations: string }>();
+
+    const byPlantedCulture = ruralPropertiesByPlantedCulture || [];
 
     const soilUseRaw = await this.ruralPropertyRepo
       .createQueryBuilder('rp')
@@ -58,11 +62,11 @@ export class DashboardsService {
       totalRuralProperties,
       totalAreal: totalAreal,
       charts: {
-        byState: ruralPropertiesByState.map((item) => ({
+        byState: byState.map((item) => ({
           label: item.state,
           value: Number(item.total_rural_properties),
         })),
-        byPlantedCulture: ruralPropertiesByPlantedCulture.map((item) => ({
+        byPlantedCulture: byPlantedCulture.map((item) => ({
           label: item.planted_culture,
           value: Number(item.total_cultivations),
         })),

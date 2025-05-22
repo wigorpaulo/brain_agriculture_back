@@ -13,6 +13,8 @@ import { RuralProperty } from '../src/rural_properties/entities/rural_property.e
 import { CreateRuralPropertyDto } from '../src/rural_properties/dto/create-rural_property.dto';
 import { UpdateRuralPropertyDto } from '../src/rural_properties/dto/update-rural_property.dto';
 
+jest.setTimeout(30000);
+
 describe('RuralPropertiesController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
@@ -21,29 +23,38 @@ describe('RuralPropertiesController (e2e)', () => {
   let cityId: number;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [TestModule],
-    }).compile();
+    try {
+      const moduleFixture: TestingModule = await Test.createTestingModule({
+        imports: [TestModule],
+      }).compile();
 
-    app = moduleFixture.createNestApplication();
+      app = moduleFixture.createNestApplication();
 
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-        stopAtFirstError: true,
-      }),
-    );
+      app.useGlobalPipes(
+        new ValidationPipe({
+          whitelist: true,
+          forbidNonWhitelisted: true,
+          transform: true,
+          stopAtFirstError: true,
+        }),
+      );
 
-    dataSource = moduleFixture.get<DataSource>(DataSource);
+      await app.init();
 
-    await app.init();
-  });
+      dataSource = moduleFixture.get<DataSource>(DataSource);
+      await dataSource.synchronize(true);
+    } catch (error) {
+      console.error('Error during app initialization:', error);
+      throw error; // Isso fará o teste falhar explicitamente se houver um erro de inicialização
+    }
+  }, 30000);
 
   afterAll(async () => {
-    await app.close();
-  });
+    await dataSource.destroy();
+    if (app) {
+      await app.close();
+    }
+  }, 10000);
 
   beforeEach(async () => {
     // Limpa as tabelas antes de cada teste

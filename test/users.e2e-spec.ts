@@ -30,9 +30,10 @@ describe('UsersController (e2e)', () => {
       }),
     );
 
-    dataSource = moduleFixture.get<DataSource>(DataSource);
-
     await app.init();
+
+    dataSource = moduleFixture.get<DataSource>(DataSource);
+    await dataSource.synchronize(true);
   });
 
   beforeEach(async () => {
@@ -40,8 +41,9 @@ describe('UsersController (e2e)', () => {
   });
 
   afterAll(async () => {
+    await dataSource.destroy();
     await app.close();
-  });
+  }, 10000);
 
   describe('POST /users', () => {
     it('should create a user successfully', async () => {

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CitiesModule } from '../src/cities/cities.module';
@@ -18,6 +18,7 @@ import { RuralProperty } from '../src/rural_properties/entities/rural_property.e
 import { CultivationsModule } from '../src/cultivations/cultivations.module';
 import { Cultivation } from '../src/cultivations/entities/cultivation.entity';
 import { DashboardsModule } from '../src/dashboards/dashboards.module';
+
 // importe outros módulos que deseja testar
 
 @Module({
@@ -50,16 +51,16 @@ import { DashboardsModule } from '../src/dashboards/dashboards.module';
       RuralProperty,
       Cultivation,
     ]),
-    CitiesModule,
-    StatesModule,
-    UsersModule,
-    AuthModule,
-    HarvestsModule,
-    PlantedCulturesModule,
-    ProducersModule,
-    RuralPropertiesModule,
-    CultivationsModule,
-    DashboardsModule,
+    forwardRef(() => CitiesModule),
+    forwardRef(() => StatesModule),
+    forwardRef(() => UsersModule),
+    forwardRef(() => AuthModule),
+    forwardRef(() => HarvestsModule),
+    forwardRef(() => PlantedCulturesModule),
+    forwardRef(() => ProducersModule),
+    forwardRef(() => RuralPropertiesModule),
+    forwardRef(() => CultivationsModule),
+    forwardRef(() => DashboardsModule),
     // outros módulos aqui
   ],
   exports: [TypeOrmModule],

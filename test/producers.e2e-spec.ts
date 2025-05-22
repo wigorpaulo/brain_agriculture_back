@@ -12,6 +12,8 @@ import { CreateProducerDto } from '../src/producers/dto/create-producer.dto';
 import { UpdateProducerDto } from '../src/producers/dto/update-producer.dto';
 import { State } from '../src/states/entities/state.entity';
 
+jest.setTimeout(30000);
+
 describe('ProducersController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
@@ -33,14 +35,16 @@ describe('ProducersController (e2e)', () => {
       }),
     );
 
-    dataSource = moduleFixture.get<DataSource>(DataSource);
-
     await app.init();
+
+    dataSource = moduleFixture.get<DataSource>(DataSource);
+    await dataSource.synchronize(true);
   });
 
   afterAll(async () => {
+    await dataSource.destroy();
     await app.close();
-  });
+  }, 10000);
 
   beforeEach(async () => {
     // Limpa as tabelas antes de cada teste

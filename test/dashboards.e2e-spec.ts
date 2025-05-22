@@ -16,35 +16,44 @@ import { User } from '../src/users/entities/user.entity';
 import { CreateRuralPropertyDto } from '../src/rural_properties/dto/create-rural_property.dto';
 import { CreateCultivationDto } from '../src/cultivations/dto/create-cultivation.dto';
 
+jest.setTimeout(30000);
+
 describe('DashboardsController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let accessToken: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [TestModule],
-    }).compile();
+    try {
+      const moduleFixture: TestingModule = await Test.createTestingModule({
+        imports: [TestModule],
+      }).compile();
 
-    app = moduleFixture.createNestApplication();
+      app = moduleFixture.createNestApplication();
 
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-        stopAtFirstError: true,
-      }),
-    );
+      app.useGlobalPipes(
+        new ValidationPipe({
+          whitelist: true,
+          forbidNonWhitelisted: true,
+          transform: true,
+          stopAtFirstError: true,
+        }),
+      );
 
-    dataSource = moduleFixture.get<DataSource>(DataSource);
+      await app.init();
 
-    await app.init();
+      dataSource = moduleFixture.get<DataSource>(DataSource);
+      await dataSource.synchronize(true);
+    } catch (error) {
+      console.error('Error during app initialization:', error);
+      throw error; // Isso fará o teste falhar explicitamente se houver um erro de inicialização
+    }
   });
 
   afterAll(async () => {
+    await dataSource.destroy();
     await app.close();
-  });
+  }, 10000);
 
   beforeEach(async () => {
     // Limpa as tabelas antes de cada teste

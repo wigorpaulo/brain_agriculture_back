@@ -15,8 +15,8 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return "Back-end: Gerenciador de cadastro de produtores rurais"', () => {
+      expect(appController.getHello()).toBe('Back-end: Gerenciador de cadastro de produtores rurais');
     });
   });
 });
