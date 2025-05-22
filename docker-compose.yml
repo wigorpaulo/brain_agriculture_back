@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   api:
     build: .
@@ -18,7 +20,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: brain_agriculture_prod
+      POSTGRES_DB: brain_agriculture
     ports:
       - "5432:5432"
     volumes:
