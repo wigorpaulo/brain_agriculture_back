@@ -38,7 +38,7 @@ export class UserValidationService {
 
   private messageNotFound(id: number): never {
     throw new NotFoundException({
-      message: `Usuário não encontrada`,
+      message: `Usuário não encontrado`,
       details: {
         id,
         suggestion:

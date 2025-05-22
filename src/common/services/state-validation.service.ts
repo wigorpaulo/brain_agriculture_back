@@ -30,7 +30,7 @@ export class StateValidationService {
 
   private messageNotFound(id: number): never {
     throw new NotFoundException({
-      message: `Estado não encontrada`,
+      message: `Estado não encontrado`,
       details: {
         id,
         suggestion:
