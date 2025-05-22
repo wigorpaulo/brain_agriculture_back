@@ -12,7 +12,7 @@ describe('StatesService', () => {
   let repo: jest.Mocked<Repository<State>>;
   let validationService: jest.Mocked<StateValidationService>;
 
-  const mockState: State = {
+  const mockState = {
     id: 1,
     name: 'São Paulo',
     uf: 'SP',
