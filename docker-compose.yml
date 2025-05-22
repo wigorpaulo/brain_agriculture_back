@@ -1,0 +1,35 @@
+services:
+  api:
+    build: .
+    container_name: api
+    ports:
+      - '3000:3000'
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/brain_agriculture
+    depends_on:
+      - db
+    networks:
+      - api_network
+
+  dp:
+    image: postgres:17
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: brain_agriculture_prod
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - api_network
+
+volumes:
+  postgres_data:
+
+networks:
+  api_network:
+    driver: bridge
+    name: api_network
