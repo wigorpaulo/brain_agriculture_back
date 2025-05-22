@@ -9,6 +9,8 @@ import { City } from '../src/cities/entities/city.entity';
 import { State } from '../src/states/entities/state.entity';
 import { HarvestsModule } from '../src/harvests/harvests.module';
 import { Harvest } from '../src/harvests/entities/harvest.entity';
+import { PlantedCulture } from '../src/planted_cultures/entities/planted_culture.entity';
+import { PlantedCulturesModule } from '../src/planted_cultures/planted_cultures.module';
 // importe outros módulos que deseja testar
 
 @Module({
@@ -32,12 +34,13 @@ import { Harvest } from '../src/harvests/entities/harvest.entity';
         dropSchema: true, // recria o schema a cada execução de teste
       }),
     }),
-    TypeOrmModule.forFeature([City, State, Harvest]),
+    TypeOrmModule.forFeature([City, State, Harvest, PlantedCulture]),
     CitiesModule,
     StatesModule,
     UsersModule,
     AuthModule,
     HarvestsModule,
+    PlantedCulturesModule,
     // outros módulos aqui
   ],
   exports: [TypeOrmModule],
