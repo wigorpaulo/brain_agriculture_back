@@ -89,3 +89,7 @@ http://localhost:3000/api
 - Docker com PostgreSQL
 
 - Logs com Logger do NestJS
+
+## Diagrama do banco de dados
+
+![Diagrama](./diagramDB.png)
