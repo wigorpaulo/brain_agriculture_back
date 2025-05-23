@@ -1,16 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProducersController } from './producers.controller';
 import { ProducersService } from './producers.service';
-import { CreateProducerDto } from './dto/create-producer.dto';
-import { UpdateProducerDto } from './dto/update-producer.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { User } from '../users/entities/user.entity';
 import { Producer } from './entities/producer.entity';
-import { State } from '../states/entities/state.entity';
-import { City } from '../cities/entities/city.entity';
 import { UserValidationService } from '../common/services/user-validation.service';
+import { mockProducersService, mockUserValidationService } from '../../test/mocks/user.mock';
+import { mockJwtPayload } from '../../test/mocks/jwt.mocks';
+import { mockProducer } from '../../test/mocks/producer.mocks';
+import {
+  mockProducerArray,
+  mockCreateProducerDto,
+  mockUpdateProducerDto,
+} from '../../test/mocks/producer.mocks';
 
 // Mock para evitar erro com @User() decorator
 jest.mock('../common/decorators/user.decorator', () => ({
@@ -21,77 +23,13 @@ describe('ProducersController', () => {
   let controller: ProducersController;
   let service: ProducersService;
 
-  const mockJwtPayload: JwtPayload = {
-    sub: 1,
-    email: 'test@example.com',
-  };
-
-  const mockUser = {
-    id: Number(mockJwtPayload.sub),
-    name: 'Test User',
-    email: mockJwtPayload.email,
-  } as User;
-
-  const mockProducer = {
-    id: 1,
-    name: 'João da Silva',
-    cpf_cnpj: '80780550056',
-    created_by: mockUser,
-  } as Producer;
-
-  const mockState: State = {
-    id: 1,
-    name: 'São Paulo',
-    uf: 'SP',
-    created_at: new Date(),
-    updated_at: new Date(),
-  } as State;
-
-  const mockCity = {
-    id: 1,
-    name: 'São Paulo',
-    state: mockState,
-    created_at: new Date(),
-    updated_at: new Date(),
-  } as City;
-
-  const mockProducerArray = [
-    mockProducer,
-    {
-      ...mockProducer,
-      id: 2,
-      name: 'Maria Oliveira',
-    },
-  ];
-
-  const mockCreateProducerDto: CreateProducerDto = {
-    name: 'Carlos Pereira',
-    cpf_cnpj: '11122233344',
-    city_id: mockCity.id,
-  };
-
-  const mockUpdateProducerDto: UpdateProducerDto = {
-    name: 'Carlos Pereira Atualizado',
-  };
-
-  const mockUserValidationService = {
-    validate: jest.fn(),
-    validateEmailUnique: jest.fn().mockResolvedValue({ id: 1 }),
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProducersController],
       providers: [
         {
           provide: ProducersService,
-          useValue: {
-            create: jest.fn(),
-            findAll: jest.fn(),
-            findOne: jest.fn(),
-            update: jest.fn(),
-            remove: jest.fn(),
-          },
+          useValue: mockProducersService,
         },
         {
           provide: getRepositoryToken(Producer),

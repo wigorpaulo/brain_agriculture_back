@@ -3,13 +3,18 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HarvestsController } from './harvests.controller';
 import { HarvestsService } from './harvests.service';
-import { CreateHarvestDto } from './dto/create-harvest.dto';
-import { UpdateHarvestDto } from './dto/update-harvest.dto';
-import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { Harvest } from './entities/harvest.entity';
-import { User } from '../users/entities/user.entity';
 import { UserValidationService } from '../common/services/user-validation.service';
 import { HarvestValidationService } from '../common/services/harvest-validation.service';
+import { mockJwtPayload } from '../../test/mocks/jwt.mocks';
+import { mockUserValidationService } from '../../test/mocks/user.mock';
+import {
+  mockHarvest,
+  mockHarvestArray,
+  mockCreateHarvestDto,
+  mockUpdateHarvestDto,
+  mockHarvestValidationService,
+} from '../../test/mocks/harvest.mocks';
 
 // Mock para evitar erros com @User() decorator
 jest.mock('../common/decorators/user.decorator', () => ({
@@ -19,50 +24,6 @@ jest.mock('../common/decorators/user.decorator', () => ({
 describe('HarvestsController', () => {
   let controller: HarvestsController;
   let service: HarvestsService;
-
-  const mockJwtPayload: JwtPayload = {
-    sub: 1,
-    email: 'test@example.com',
-  };
-
-  const mockUser = {
-    id: Number(mockJwtPayload.sub),
-    name: 'Test User',
-    email: mockJwtPayload.email,
-  } as User;
-
-  const mockHarvest = {
-    id: 1,
-    name: 'Safra 2024',
-    created_by: mockUser,
-  } as Harvest;
-
-  const mockHarvestArray = [
-    mockHarvest,
-    {
-      ...mockHarvest,
-      id: 2,
-      name: 'Safra 2025',
-    },
-  ];
-
-  const mockCreateHarvestDto: CreateHarvestDto = {
-    name: 'Nova Safra',
-  };
-
-  const mockUpdateHarvestDto: UpdateHarvestDto = {
-    name: 'Safra 2024 Atualizada',
-  };
-
-  const mockUserValidationService = {
-    validate: jest.fn(),
-    validateEmailUnique: jest.fn(),
-  };
-
-  const mockHarvestValidationService = {
-    validate: jest.fn(),
-    validateNameUnique: jest.fn(),
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

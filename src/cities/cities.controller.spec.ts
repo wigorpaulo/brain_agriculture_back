@@ -3,48 +3,23 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CitiesController } from './cities.controller';
 import { CitiesService } from './cities.service';
-import { CreateCityDto } from './dto/create-city.dto';
-import { UpdateCityDto } from './dto/update-city.dto';
 import { City } from './entities/city.entity';
-import { State } from '../states/entities/state.entity';
 import { CityValidationService } from '../common/services/city-validation.service';
 import { StateValidationService } from '../common/services/state-validation.service';
+import {
+  mockCity,
+  mockCityArray,
+  mockUpdateCityDto,
+  mockCreateCityDto,
+  mockCityValidationService,
+  MockRepository,
+} from '../../test/mocks/city.mock';
+import { mockStateValidationService } from '../../test/mocks/state.mock';
 
 describe('CitiesController', () => {
   let controller: CitiesController;
   let service: CitiesService;
   let repository: Repository<City>;
-
-  const mockState: State = {
-    id: 1,
-    name: 'São Paulo',
-    uf: 'SP',
-    created_at: new Date(),
-    updated_at: new Date(),
-  } as State;
-
-  const mockCity = {
-    id: 1,
-    name: 'São Paulo',
-    state: mockState,
-    created_at: new Date(),
-    updated_at: new Date(),
-  } as City;
-
-  const mockCityArray = [
-    { ...mockCity, id: 1 },
-    { ...mockCity, id: 2, name: 'Rio de Janeiro' },
-  ];
-
-  const mockCreateCityDto: CreateCityDto = {
-    name: 'Curitiba',
-    state_id: 1,
-  };
-
-  const mockUpdateCityDto: UpdateCityDto = {
-    name: 'Curitiba Atualizada',
-    state_id: 1,
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -53,27 +28,15 @@ describe('CitiesController', () => {
         CitiesService,
         {
           provide: getRepositoryToken(City),
-          useClass: class MockRepository {
-            findOne = jest.fn();
-            find = jest.fn();
-            save = jest.fn();
-            delete = jest.fn();
-          },
+          useClass: MockRepository,
         },
         {
           provide: CityValidationService,
-          useValue: {
-            validateNameUnique: jest.fn(),
-            validate: jest.fn(),
-            // adicione aqui outros métodos usados nos testes
-          },
+          useValue: mockCityValidationService,
         },
         {
           provide: StateValidationService,
-          useValue: {
-            validate: jest.fn(),
-            // adicione outros métodos conforme necessário
-          },
+          useValue: mockStateValidationService,
         },
       ],
     }).compile();

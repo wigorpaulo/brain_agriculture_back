@@ -1,15 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlantedCulturesController } from './planted_cultures.controller';
 import { PlantedCulturesService } from './planted_cultures.service';
-import { CreatePlantedCultureDto } from './dto/create-planted_culture.dto';
-import { UpdatePlantedCultureDto } from './dto/update-planted_culture.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { User } from '../users/entities/user.entity';
-import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { PlantedCulture } from './entities/planted_culture.entity';
 import { PlantedCultureValidationService } from '../common/services/planted_culture-validation.service';
 import { UserValidationService } from '../common/services/user-validation.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { mockUserValidationService } from '../../test/mocks/user.mock';
+import { mockJwtPayload } from '../../test/mocks/jwt.mocks';
+import {
+  mockPlantedCulture,
+  mockPlantedCultureArray,
+  mockCreatePlantedCultureDto,
+  mockUpdatePlantedCultureDto,
+  mockPlantedCultureValidationService,
+} from '../../test/mocks/planted_culture.mocks';
 
 // Mock para evitar erros com @User() decorator
 jest.mock('../common/decorators/user.decorator', () => ({
@@ -19,50 +24,6 @@ jest.mock('../common/decorators/user.decorator', () => ({
 describe('PlantedCulturesController', () => {
   let controller: PlantedCulturesController;
   let service: PlantedCulturesService;
-
-  const mockJwtPayload: JwtPayload = {
-    sub: 1,
-    email: 'test@example.com',
-  };
-
-  const mockUser = {
-    id: Number(mockJwtPayload.sub),
-    name: 'Test User',
-    email: mockJwtPayload.email,
-  } as User;
-
-  const mockPlantedCulture = {
-    id: 1,
-    name: 'Soja',
-    created_by: mockUser,
-  } as PlantedCulture;
-
-  const mockPlantedCultureArray = [
-    mockPlantedCulture,
-    {
-      ...mockPlantedCulture,
-      id: 2,
-      name: 'Milho',
-    },
-  ];
-
-  const mockCreatePlantedCultureDto: CreatePlantedCultureDto = {
-    name: 'Trigo',
-  };
-
-  const mockUpdatePlantedCultureDto: UpdatePlantedCultureDto = {
-    name: 'Trigo Atualizado',
-  };
-
-  const mockUserValidationService = {
-    validate: jest.fn(),
-    validateEmailUnique: jest.fn().mockResolvedValue({ id: 1 }),
-  };
-
-  const mockPlantedCultureValidationService = {
-    validate: jest.fn(),
-    validateNameUnique: jest.fn().mockResolvedValue({ id: 1 }),
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

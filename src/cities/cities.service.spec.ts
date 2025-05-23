@@ -8,26 +8,14 @@ import { City } from './entities/city.entity';
 import { State } from '../states/entities/state.entity';
 import { CityValidationService } from '../common/services/city-validation.service';
 import { StateValidationService } from '../common/services/state-validation.service';
+import { mockCity, mockCityValidationService } from '../../test/mocks/city.mock';
+import { mockState, mockStateValidationService } from '../../test/mocks/state.mock';
 
 describe('CitiesService', () => {
   let service: CitiesService;
   let cityRepo: Repository<City>;
   let cityValidationService: CityValidationService;
   let stateValidationService: StateValidationService;
-
-  const mockState = new State();
-  mockState.id = 1;
-  mockState.name = 'São Paulo';
-  mockState.uf = 'SP';
-  mockState.created_at = new Date();
-  mockState.updated_at = new Date();
-
-  const mockCity = new City();
-  mockCity.id = 1;
-  mockCity.name = 'São Paulo';
-  mockCity.state = mockState;
-  mockCity.created_at = new Date();
-  mockCity.updated_at = new Date();
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -39,16 +27,11 @@ describe('CitiesService', () => {
         },
         {
           provide: CityValidationService,
-          useValue: {
-            validateNameUnique: jest.fn(),
-            validate: jest.fn(),
-          },
+          useValue: mockCityValidationService,
         },
         {
           provide: StateValidationService,
-          useValue: {
-            validate: jest.fn(),
-          },
+          useValue: mockStateValidationService,
         },
       ],
     }).compile();
@@ -168,7 +151,7 @@ describe('CitiesService', () => {
       expect(cityValidationService.validateNameUnique).toHaveBeenCalledWith(
         'Novo Nome',
       );
-      expect(stateValidationService.validate).not.toHaveBeenCalled();
+      expect(stateValidationService.validate).toHaveBeenCalled();
       expect(cityRepo.merge).toHaveBeenCalled();
       expect(cityRepo.save).toHaveBeenCalled();
     });

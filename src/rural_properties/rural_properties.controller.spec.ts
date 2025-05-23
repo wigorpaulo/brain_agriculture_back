@@ -1,17 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RuralPropertiesController } from './rural_properties.controller';
 import { RuralPropertiesService } from './rural_properties.service';
-import { CreateRuralPropertyDto } from './dto/create-rural_property.dto';
-import { UpdateRuralPropertyDto } from './dto/update-rural_property.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
-import { User } from '../users/entities/user.entity';
-import { Producer } from '../producers/entities/producer.entity';
-import { State } from '../states/entities/state.entity';
-import { City } from '../cities/entities/city.entity';
 import { RuralProperty } from './entities/rural_property.entity';
 import { UserValidationService } from '../common/services/user-validation.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import {
+  mockRuralProperty,
+  mockRuralPropertyArray,
+  mockCreateRuralPropertyDto,
+  mockUpdateRuralPropertyDto,
+  mockUserValidationService,
+} from '../../test/mocks/rural_properties.mocks';
+import { mockJwtPayload } from '../../test/mocks/jwt.mocks';
 
 // Mock para evitar erro com @User() decorator
 jest.mock('../common/decorators/user.decorator', () => ({
@@ -21,78 +22,6 @@ jest.mock('../common/decorators/user.decorator', () => ({
 describe('RuralPropertiesController', () => {
   let controller: RuralPropertiesController;
   let service: RuralPropertiesService;
-
-  const mockJwtPayload: JwtPayload = {
-    sub: 1,
-    email: 'test@example.com',
-  };
-
-  const mockUser = {
-    id: Number(mockJwtPayload.sub),
-    name: 'Test User',
-    email: mockJwtPayload.email,
-  } as User;
-
-  const mockProducer = {
-    id: 1,
-    name: 'João da Silva',
-    cpf_cnpj: '80780550056',
-    created_by: mockUser,
-  } as Producer;
-
-  const mockState: State = {
-    id: 1,
-    name: 'São Paulo',
-    uf: 'SP',
-    created_at: new Date(),
-    updated_at: new Date(),
-  } as State;
-
-  const mockCity = {
-    id: 1,
-    name: 'São Paulo',
-    state: mockState,
-    created_at: new Date(),
-    updated_at: new Date(),
-  } as City;
-
-  const mockRuralProperty = {
-    id: 1,
-    farm_name: 'Fazenda Bela Vista',
-    total_area: 8,
-    arable_area: 4,
-    vegetation_area: 4,
-    created_by: mockUser,
-    city: mockCity,
-    producer: mockProducer,
-  } as RuralProperty;
-
-  const mockRuralPropertyArray = [
-    mockRuralProperty,
-    {
-      ...mockRuralProperty,
-      id: 2,
-      farm_name: 'Chácara Verde',
-    },
-  ];
-
-  const mockCreateRuralPropertyDto: CreateRuralPropertyDto = {
-    farm_name: 'Sítio das Árvores',
-    total_area: 30,
-    arable_area: 15,
-    vegetation_area: 15,
-    cityId: mockCity.id,
-    producerId: mockProducer.id,
-  };
-
-  const mockUpdateRuralPropertyDto: UpdateRuralPropertyDto = {
-    farm_name: 'Sítio das Árvores Atualizado',
-  };
-
-  const mockUserValidationService = {
-    validate: jest.fn(),
-    validateEmailUnique: jest.fn().mockResolvedValue({ id: 1 }),
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
