@@ -11,11 +11,8 @@ RUN npm install
 # Copia o restante dos arquivos do projeto
 COPY . .
 
-# Compila o projeto
-RUN npm run build
-
 # Expõe a porta da aplicação NestJS
 EXPOSE 3000
 
 # Comando para rodar a aplicação
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:dev"]
