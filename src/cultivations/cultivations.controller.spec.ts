@@ -15,6 +15,16 @@ import { Harvest } from '../harvests/entities/harvest.entity';
 import { PlantedCulture } from '../planted_cultures/entities/planted_culture.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UserValidationService } from '../common/services/user-validation.service';
+import { mockJwtPayload } from '../../test/mocks/jwt.mocks';
+import {
+  mockCultivation,
+  mockCultivationArray,
+  mockCreateCultivationDto,
+} from '../../test/mocks/cultivation.mocks';
+import {
+  mockUser,
+  mockUserValidationService,
+} from '../../test/mocks/user.mock';
 
 // Mock para evitar erro com @User() decorator
 jest.mock('../common/decorators/user.decorator', () => ({
@@ -25,97 +35,14 @@ describe('CultivationsController', () => {
   let controller: CultivationsController;
   let service: CultivationsService;
 
-  const mockJwtPayload: JwtPayload = {
-    sub: 1,
-    email: 'test@example.com',
-  };
-
-  const mockUser = {
-    id: Number(mockJwtPayload.sub),
-    name: 'Test User',
-    email: mockJwtPayload.email,
-  } as User;
-
-  const mockProducer = {
-    id: 1,
-    name: 'João da Silva',
-    cpf_cnpj: '80780550056',
-    created_by: mockUser,
-  } as Producer;
-
-  const mockState: State = {
-    id: 1,
-    name: 'São Paulo',
-    uf: 'SP',
-    created_at: new Date(),
-    updated_at: new Date(),
-  } as State;
-
-  const mockCity = {
-    id: 1,
-    name: 'São Paulo',
-    state: mockState,
-    created_at: new Date(),
-    updated_at: new Date(),
-  } as City;
-
-  const mockRuralProperty = {
-    id: 1,
-    farm_name: 'Fazenda Bela Vista',
-    total_area: 8,
-    arable_area: 4,
-    vegetation_area: 4,
-    created_by: mockUser,
-    city: mockCity,
-    producer: mockProducer,
-  } as RuralProperty;
-
-  const mockHarvest = {
-    id: 1,
-    name: 'Safra 2024',
-    created_by: mockUser,
-  } as Harvest;
-
   const mockHarvestNew = {
     id: 1,
     name: 'Safra 2024 atualizado',
     created_by: mockUser,
   } as Harvest;
 
-  const mockPlantedCulture = {
-    id: 1,
-    name: 'Soja',
-    created_by: mockUser,
-  } as PlantedCulture;
-
-  const mockCultivation = {
-    id: 1,
-    rural_property: mockRuralProperty,
-    harvest: mockHarvest,
-    planted_culture: mockPlantedCulture,
-    created_by: mockUser,
-  } as Cultivation;
-
-  const mockCultivationArray = [
-    mockCultivation,
-    {
-      ...mockCultivation,
-    },
-  ];
-
-  const mockCreateCultivationDto: CreateCultivationDto = {
-    rural_propertyId: mockRuralProperty.id,
-    harvestId: mockHarvest.id,
-    planted_cultureId: mockPlantedCulture.id,
-  };
-
   const mockUpdateCultivationDto: UpdateCultivationDto = {
     harvestId: mockHarvestNew.id,
-  };
-
-  const mockUserValidationService = {
-    validate: jest.fn(),
-    validateEmailUnique: jest.fn().mockResolvedValue({ id: 1 }),
   };
 
   beforeEach(async () => {
