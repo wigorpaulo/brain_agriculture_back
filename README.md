@@ -90,6 +90,12 @@ http://localhost:3000/api
 
 - Logs com Logger do NestJS
 
+# Bônus: Se conseguir disponibilizar a aplicação na nuvem e acessível via internet, será um diferencial!
+
+Sistema disponivel: https://brain-agriculture-back.fly.dev/
+
+A documentação Swagger estará disponível em: https://brain-agriculture-back.fly.dev/api
+
 ## Diagrama do banco de dados
 
 ![Diagrama](./diagramDB.png)
