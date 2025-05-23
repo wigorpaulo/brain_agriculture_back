@@ -25,6 +25,10 @@
 
 Esta aplicação é parte de um teste técnico e tem como objetivo o cadastro e gestão de produtores rurais, suas propriedades, culturas e safras.
 
+## Funcionamento do sistema
+
+Primeiramente deve fazer o cadastro do usuário e logo após realizar a autenticação para poder acessar as outras funcionalidades.
+
 ## Tecnologias
 
 - [NestJS](https://nestjs.com/)
@@ -99,3 +103,7 @@ A documentação Swagger estará disponível em: https://brain-agriculture-back.
 ## Diagrama do banco de dados
 
 ![Diagrama](./diagramDB.png)
+
+## Cobertura de testes: 90.17%
+
+![Cobertura de testes](./coberturaTeste.png)

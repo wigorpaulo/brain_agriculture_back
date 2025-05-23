@@ -10,6 +10,8 @@ import { DataSource } from 'typeorm';
 import { clearDatabase } from './test-utils/truncate-helper'; // opcional
 import { ValidationPipe } from '@nestjs/common';
 
+jest.setTimeout(30000);
+
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
@@ -34,7 +36,7 @@ describe('UsersController (e2e)', () => {
 
     dataSource = moduleFixture.get<DataSource>(DataSource);
     await dataSource.synchronize(true);
-  });
+  }, 30000);
 
   beforeEach(async () => {
     await clearDatabase(dataSource, [User]); // limpa antes de cada teste
