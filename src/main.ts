@@ -17,7 +17,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('API Brain Agriculture')
-    .setDescription('Documentação da API')
+    .setDescription('Sistema de gestão agrícola')
     .setVersion('1.0')
     .addBearerAuth(
       {
