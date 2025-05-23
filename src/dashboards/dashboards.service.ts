@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RuralProperty } from '../rural_properties/entities/rural_property.entity';
 import { Repository } from 'typeorm';
@@ -7,6 +7,8 @@ import { DashboardResponseDto } from './dto/dashboard-response.dto';
 
 @Injectable()
 export class DashboardsService {
+  private readonly logger = new Logger(DashboardsService.name);
+
   constructor(
     @InjectRepository(RuralProperty)
     private readonly ruralPropertyRepo: Repository<RuralProperty>,
@@ -58,6 +60,7 @@ export class DashboardsService {
       ? Number(soilUseRaw.vegetation_area)
       : 0;
 
+    this.logger.log('Dashboard find with successfully.');
     return {
       totalRuralProperties,
       totalAreal: totalAreal,

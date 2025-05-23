@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DashboardsController } from './dashboards.controller';
 import { DashboardsService } from './dashboards.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { DashboardChartItem, DashboardResponseDto } from './dto/dashboard-response.dto';
+import { DashboardResponseDto } from './dto/dashboard-response.dto';
 
 describe('DashboardsController', () => {
   let controller: DashboardsController;
