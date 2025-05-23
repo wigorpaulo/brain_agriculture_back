@@ -5,11 +5,11 @@ config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  host: 'brain-agriculture-back-db.internal',
+  port: 5433,
+  username: 'postgres',
+  password: 'hFqJzcDgH9U2NdO',
+  database: 'brain_agriculture_back',
   synchronize: false,
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
   migrations: ['src/migrations/*.ts'],
