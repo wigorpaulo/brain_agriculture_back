@@ -11,7 +11,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: sh -c "npm run build && npm run migration:run && npm run start:dev"
+    command: sh -c "npm run build && npm run migration:run -- -d data-source.ts && npm run start:dev"
     networks:
       - api_network
 
