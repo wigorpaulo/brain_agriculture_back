@@ -3,16 +3,11 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { mockUsersService } from '../../test/mocks/user.mock';
 
 describe('UsersController', () => {
   let controller: UsersController;
   let usersService: UsersService;
-
-  const mockUsersService = {
-    create: jest.fn(),
-    findAll: jest.fn(),
-    update: jest.fn(),
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

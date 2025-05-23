@@ -2,42 +2,26 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HarvestsService } from './harvests.service';
-import { CreateHarvestDto } from './dto/create-harvest.dto';
-import { UpdateHarvestDto } from './dto/update-harvest.dto';
 import { Harvest } from './entities/harvest.entity';
 import { UserValidationService } from '../common/services/user-validation.service';
 import { HarvestValidationService } from '../common/services/harvest-validation.service';
-import { User } from '../users/entities/user.entity';
+import {
+  mockUserNew,
+  mockUserValidationService,
+} from '../../test/mocks/user.mock';
+import {
+  mockHarvestNew,
+  mockHarvestArrayNew,
+  mockCreateHarvestDto,
+  mockUpdateHarvestDto,
+  mockHarvestValidationService,
+} from '../../test/mocks/harvest.mocks';
 
 describe('HarvestsService', () => {
   let service: HarvestsService;
   let harvestRepo: Repository<Harvest>;
   let userValidationService: UserValidationService;
   let harvestValidationService: HarvestValidationService;
-
-  const mockUser = {
-    id: 1,
-    email: 'test@example.com',
-  } as User;
-
-  const mockHarvest = {
-    id: 1,
-    name: 'Safra 2024',
-    created_by: mockUser,
-  } as Harvest;
-
-  const mockHarvestArray = [
-    { ...mockHarvest, id: 1 },
-    { ...mockHarvest, id: 2, name: 'Safra 2025' },
-  ];
-
-  const mockCreateHarvestDto: CreateHarvestDto = {
-    name: 'Nova Safra',
-  };
-
-  const mockUpdateHarvestDto: UpdateHarvestDto = {
-    name: 'Safra 2024 Atualizada',
-  };
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -49,16 +33,11 @@ describe('HarvestsService', () => {
         },
         {
           provide: UserValidationService,
-          useValue: {
-            validate: jest.fn().mockResolvedValue(mockUser),
-          },
+          useValue: mockUserValidationService,
         },
         {
           provide: HarvestValidationService,
-          useValue: {
-            validateNameUnique: jest.fn(),
-            validate: jest.fn(),
-          },
+          useValue: mockHarvestValidationService,
         },
       ],
     }).compile();
@@ -84,18 +63,18 @@ describe('HarvestsService', () => {
       jest
         .spyOn(harvestValidationService, 'validateNameUnique')
         .mockResolvedValue();
-      jest.spyOn(userValidationService, 'validate').mockResolvedValue(mockUser);
-      jest.spyOn(harvestRepo, 'create').mockReturnValue(mockHarvest);
-      jest.spyOn(harvestRepo, 'save').mockResolvedValue(mockHarvest);
+      jest.spyOn(userValidationService, 'validate').mockResolvedValue(mockUserNew);
+      jest.spyOn(harvestRepo, 'create').mockReturnValue(mockHarvestNew);
+      jest.spyOn(harvestRepo, 'save').mockResolvedValue(mockHarvestNew);
 
-      const result = await service.create(mockCreateHarvestDto, mockUser.id);
+      const result = await service.create(mockCreateHarvestDto, mockUserNew.id);
 
-      expect(result).toEqual(expect.objectContaining(mockHarvest));
+      expect(result).toEqual(expect.objectContaining(mockHarvestNew));
 
       expect(harvestValidationService.validateNameUnique).toHaveBeenCalledWith(
         mockCreateHarvestDto.name,
       );
-      expect(userValidationService.validate).toHaveBeenCalledWith(mockUser.id);
+      expect(userValidationService.validate).toHaveBeenCalledWith(mockUserNew.id);
       expect(harvestRepo.create).toHaveBeenCalled();
       expect(harvestRepo.save).toHaveBeenCalled();
     });
@@ -103,17 +82,17 @@ describe('HarvestsService', () => {
 
   describe('findAll', () => {
     it('should return an array of harvests serialized', async () => {
-      jest.spyOn(harvestRepo, 'find').mockResolvedValue(mockHarvestArray);
+      jest.spyOn(harvestRepo, 'find').mockResolvedValue(mockHarvestArrayNew);
 
       const result = await service.findAll();
 
       expect(result).toEqual(
-        mockHarvestArray.map((h) => ({
+        mockHarvestArrayNew.map((h) => ({
           id: h.id,
           name: h.name,
           created_by: {
-            id: mockUser.id,
-            email: mockUser.email,
+            id: mockUserNew.id,
+            email: mockUserNew.email,
           },
           created_at: h.created_at,
           updated_at: h.updated_at,
@@ -128,11 +107,11 @@ describe('HarvestsService', () => {
 
   describe('findOne', () => {
     it('should return a single harvest by ID', async () => {
-      jest.spyOn(harvestRepo, 'findOne').mockResolvedValue(mockHarvest);
+      jest.spyOn(harvestRepo, 'findOne').mockResolvedValue(mockHarvestNew);
 
       const result = await service.findOne(1);
 
-      expect(result).toEqual(mockHarvest);
+      expect(result).toEqual(mockHarvestNew);
       expect(harvestRepo.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
     });
   });
@@ -144,12 +123,12 @@ describe('HarvestsService', () => {
         .mockResolvedValue();
       jest
         .spyOn(harvestValidationService, 'validate')
-        .mockResolvedValue(mockHarvest);
+        .mockResolvedValue(mockHarvestNew);
       jest
         .spyOn(harvestRepo, 'merge')
-        .mockReturnValue({ ...mockHarvest, name: 'Safra 2024 Atualizada' });
+        .mockReturnValue({ ...mockHarvestNew, name: 'Safra 2024 Atualizada' });
       jest.spyOn(harvestRepo, 'save').mockResolvedValue({
-        ...mockHarvest,
+        ...mockHarvestNew,
         name: mockUpdateHarvestDto.name ?? 'Safra 2024 Atualizada',
       });
 
@@ -169,13 +148,13 @@ describe('HarvestsService', () => {
     it('should delete a harvest by ID', async () => {
       jest
         .spyOn(harvestValidationService, 'validate')
-        .mockResolvedValue(mockHarvest);
-      jest.spyOn(harvestRepo, 'remove').mockResolvedValue(mockHarvest);
+        .mockResolvedValue(mockHarvestNew);
+      jest.spyOn(harvestRepo, 'remove').mockResolvedValue(mockHarvestNew);
 
       await service.remove(1);
 
       expect(harvestValidationService.validate).toHaveBeenCalledWith(1);
-      expect(harvestRepo.remove).toHaveBeenCalledWith(mockHarvest);
+      expect(harvestRepo.remove).toHaveBeenCalledWith(mockHarvestNew);
     });
   });
 });

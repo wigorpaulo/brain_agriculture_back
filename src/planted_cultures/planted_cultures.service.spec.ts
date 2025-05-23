@@ -2,47 +2,22 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PlantedCulturesService } from './planted_cultures.service';
-import { CreatePlantedCultureDto } from './dto/create-planted_culture.dto';
-import { UpdatePlantedCultureDto } from './dto/update-planted_culture.dto';
 import { PlantedCulture } from './entities/planted_culture.entity';
-import { User } from '../users/entities/user.entity';
 import { UserValidationService } from '../common/services/user-validation.service';
 import { PlantedCultureValidationService } from '../common/services/planted_culture-validation.service';
+import {
+  mockPlantedCultureNew,
+  mockPlantedCultureArrayNew,
+  mockCreatePlantedCultureDto,
+  mockUpdatePlantedCultureDto,
+} from '../../test/mocks/planted_culture.mocks';
+import { mockUserNew } from '../../test/mocks/user.mock';
 
 describe('PlantedCulturesService', () => {
   let service: PlantedCulturesService;
   let plantedCultureRepo: Repository<PlantedCulture>;
   let userValidationService: UserValidationService;
   let plantedCultureValidationService: PlantedCultureValidationService;
-
-  const mockUser = {
-    id: 1,
-    name: 'Test User',
-    email: 'test@example.com',
-  } as User;
-
-  const mockPlantedCulture = {
-    id: 1,
-    name: 'Soja',
-    created_by: mockUser,
-  } as PlantedCulture;
-
-  const mockPlantedCultureArray = [
-    mockPlantedCulture,
-    {
-      ...mockPlantedCulture,
-      id: 2,
-      name: 'Milho',
-    },
-  ];
-
-  const mockCreatePlantedCultureDto: CreatePlantedCultureDto = {
-    name: 'Trigo',
-  };
-
-  const mockUpdatePlantedCultureDto: UpdatePlantedCultureDto = {
-    name: 'Trigo Atualizado',
-  };
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -55,7 +30,7 @@ describe('PlantedCulturesService', () => {
         {
           provide: UserValidationService,
           useValue: {
-            validate: jest.fn().mockResolvedValue(mockUser),
+            validate: jest.fn().mockResolvedValue(mockUserNew),
           },
         },
         {
@@ -90,24 +65,24 @@ describe('PlantedCulturesService', () => {
       jest
         .spyOn(plantedCultureValidationService, 'validateNameUnique')
         .mockResolvedValue();
-      jest.spyOn(userValidationService, 'validate').mockResolvedValue(mockUser);
+      jest.spyOn(userValidationService, 'validate').mockResolvedValue(mockUserNew);
       jest
         .spyOn(plantedCultureRepo, 'create')
-        .mockReturnValue(mockPlantedCulture);
+        .mockReturnValue(mockPlantedCultureNew);
       jest
         .spyOn(plantedCultureRepo, 'save')
-        .mockResolvedValue(mockPlantedCulture);
+        .mockResolvedValue(mockPlantedCultureNew);
 
       const result = await service.create(
         mockCreatePlantedCultureDto,
-        mockUser.id,
+        mockUserNew.id,
       );
 
-      expect(result).toEqual(JSON.parse(JSON.stringify(mockPlantedCulture)));
+      expect(result).toEqual(JSON.parse(JSON.stringify(mockPlantedCultureNew)));
       expect(
         plantedCultureValidationService.validateNameUnique,
       ).toHaveBeenCalledWith(mockCreatePlantedCultureDto.name);
-      expect(userValidationService.validate).toHaveBeenCalledWith(mockUser.id);
+      expect(userValidationService.validate).toHaveBeenCalledWith(mockUserNew.id);
       expect(plantedCultureRepo.create).toHaveBeenCalled();
       expect(plantedCultureRepo.save).toHaveBeenCalled();
     });
@@ -117,12 +92,12 @@ describe('PlantedCulturesService', () => {
     it('should return an array of planted cultures serialized', async () => {
       jest
         .spyOn(plantedCultureRepo, 'find')
-        .mockResolvedValue(mockPlantedCultureArray);
+        .mockResolvedValue(mockPlantedCultureArrayNew);
 
       const result = await service.findAll();
 
       expect(result).toEqual(
-        JSON.parse(JSON.stringify(mockPlantedCultureArray)),
+        JSON.parse(JSON.stringify(mockPlantedCultureArrayNew)),
       );
       expect(plantedCultureRepo.find).toHaveBeenCalledWith({
         relations: ['created_by'],
@@ -134,11 +109,11 @@ describe('PlantedCulturesService', () => {
     it('should return a single planted culture by ID', async () => {
       jest
         .spyOn(plantedCultureRepo, 'findOne')
-        .mockResolvedValue(mockPlantedCulture);
+        .mockResolvedValue(mockPlantedCultureNew);
 
       const result = await service.findOne(1);
 
-      expect(result).toEqual(mockPlantedCulture);
+      expect(result).toEqual(mockPlantedCultureNew);
       expect(plantedCultureRepo.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
       });
@@ -152,12 +127,12 @@ describe('PlantedCulturesService', () => {
         .mockResolvedValue();
       jest
         .spyOn(plantedCultureValidationService, 'validate')
-        .mockResolvedValue(mockPlantedCulture);
+        .mockResolvedValue(mockPlantedCultureNew);
       jest
         .spyOn(plantedCultureRepo, 'merge')
-        .mockReturnValue({ ...mockPlantedCulture, name: 'Trigo Atualizado' });
+        .mockReturnValue({ ...mockPlantedCultureNew, name: 'Trigo Atualizado' });
       jest.spyOn(plantedCultureRepo, 'save').mockResolvedValue({
-        ...mockPlantedCulture,
+        ...mockPlantedCultureNew,
         name: mockUpdatePlantedCultureDto.name ?? 'Trigo Atualizado',
       });
 
@@ -177,14 +152,14 @@ describe('PlantedCulturesService', () => {
     it('should delete a planted culture by ID', async () => {
       jest
         .spyOn(plantedCultureValidationService, 'validate')
-        .mockResolvedValue(mockPlantedCulture);
-      jest.spyOn(plantedCultureRepo, 'remove').mockResolvedValue(mockPlantedCulture);
+        .mockResolvedValue(mockPlantedCultureNew);
+      jest.spyOn(plantedCultureRepo, 'remove').mockResolvedValue(mockPlantedCultureNew);
 
       await service.remove(1);
 
       expect(plantedCultureValidationService.validate).toHaveBeenCalledWith(1);
       expect(plantedCultureRepo.remove).toHaveBeenCalledWith(
-        mockPlantedCulture,
+        mockPlantedCultureNew,
       );
     });
   });

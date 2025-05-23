@@ -5,18 +5,10 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { UserValidationService } from '../common/services/user-validation.service';
 import * as bcrypt from 'bcrypt';
-
-const mockUserRepo = {
-  create: jest.fn(),
-  save: jest.fn(),
-  find: jest.fn(),
-  merge: jest.fn(),
-};
-
-const mockUserValidationService = {
-  validate: jest.fn(),
-  validateEmailUnique: jest.fn(),
-};
+import {
+  mockUserRepo,
+  mockUserValidationService,
+} from '../../test/mocks/user.mock';
 
 describe('UsersService', () => {
   let service: UsersService;

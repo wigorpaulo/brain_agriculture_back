@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { StateValidationService } from '../common/services/state-validation.service';
 import { CreateStateDto } from './dto/create-state.dto';
 import { UpdateStateDto } from './dto/update-state.dto';
-import { mockState } from '../../test/mocks/state.mock';
+import { mockRepositoryService, mockState } from '../../test/mocks/state.mock';
 
 describe('StatesService', () => {
   let service: StatesService;
@@ -19,14 +19,7 @@ describe('StatesService', () => {
         StatesService,
         {
           provide: getRepositoryToken(State),
-          useValue: {
-            create: jest.fn(),
-            save: jest.fn(),
-            find: jest.fn(),
-            findOne: jest.fn(),
-            merge: jest.fn(),
-            remove: jest.fn(),
-          },
+          useValue: mockRepositoryService,
         },
         {
           provide: StateValidationService,
