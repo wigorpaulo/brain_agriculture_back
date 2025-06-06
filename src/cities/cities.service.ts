@@ -44,7 +44,7 @@ export class CitiesService {
   }
 
   async findOne(id: number): Promise<City | null> {
-    return await this.cityRepo.findOne({ where: { id } });
+    return await this.cityRepo.findOne({ where: { id }, relations: ['state'] });
   }
 
   async update(id: number, updateCityDto: UpdateCityDto): Promise<City> {
